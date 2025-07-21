@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Aperçu de la séance</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #fafafa; }
+    h1, h2 { text-align: center; }
+    .section { margin: 2rem 0; }
+    .bloc { background: white; border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; display: flex; gap: 1rem; align-items: center; }
+    .bloc img { width: 80px; height: auto; border: 1px solid #999; }
+    .bloc-info { flex: 1; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1em; }
+    .actions { text-align: center; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>Aperçu de la séance</h1>
+  <div id="contenu"></div>
+
+  <div class="actions">
+    <button onclick="modifier()">🔧 Modifier les critères</button>
+    <button onclick="demarrer()">▶️ Démarrer la séance</button>
+  </div>
+
+<script>
+const exercices = [
+  { titre: "Sons filés cordes à vide", type: "sons_files", objectifs: ["justesse"], duree: 10, pdf: "sons_filles_1.pdf" },
+  { titre: "Gammes en 3 octaves", type: "gammes_arpeges", objectifs: ["justesse"], duree: 6, pdf: "gammes_3oct.pdf" },
+  { titre: "Feuillard n°32", type: "exercice", objectifs: ["spiccato", "agilité"], duree: 8, pdf: "feuillard_32.pdf" },
+  { titre: "Trilles en doubles", type: "exercice", objectifs: ["trille"], duree: 7, pdf: "trilles_double.pdf" },
+  { titre: "Popper n°6", type: "etude", objectifs: ["spiccato", "agilité"], duree: 14, pdf: "popper_6.pdf" },
+  { titre: "Étude de Lee n°9", type: "etude", objectifs: ["justesse"], duree: 12, pdf: "lee_9.pdf" },
+  { titre: "Sarabande de Bach", type: "repertoire", objectifs: ["justesse", "expressivité"], duree: 12, pdf: "bach_sarabande.pdf" },
+  { titre: "Élégie de Fauré", type: "repertoire", objectifs: ["agilité", "expressivité"], duree: 15, pdf: "faure_elegie.pdf" }
+];
+
+const repartition = {
+  gammes_arpeges: 0.10,
+  exercice: 0.30,
+  etude: 0.30,
+  repertoire: 0.20
+};
+
+let config = JSON.parse(localStorage.getItem("config") || "{}");
+let seance = [];
+
+function genererSeance() {
+  if (config.sons_files) {
+    const sf = exercices.find(e => e.type === "sons_files");
+    seance.push(sf);
+  }
+
+  for (let type in repartition) {
+    const dureeBloc = Math.round(config.duree * repartition[type]);
+    const candidats = exercices.filter(ex => ex.type === type && config.objectifs.some(o => ex.objectifs.includes(o)));
+    let duree = 0;
+    for (let i = 0; i < candidats.length && duree < dureeBloc; i++) {
+      if (duree + candidats[i].duree <= dureeBloc) {
+        seance.push(candidats[i]);
+        duree += candidats[i].duree;
+      }
+    }
+  }
+
+  localStorage.setItem("seance", JSON.stringify(seance));
+}
+
+function afficherSeance() {
+  const container = document.getElementById("contenu");
+  container.innerHTML = "";
+  const groupes = { sons_files: [], gammes_arpeges: [], exercice: [], etude: [], repertoire: [] };
+  seance.forEach(b => groupes[b.type].push(b));
+
+  for (let type in groupes) {
+    if (groupes[type].length > 0) {
+      const section = document.createElement("div");
+      section.className = "section";
+      section.innerHTML = `<h2>${type.replace("_", " ").toUpperCase()}</h2>`;
+      groupes[type].forEach((bloc, index) => {
+        const div = document.createElement("div");
+        div.className = "bloc";
+        div.innerHTML = `
+          <img src="https://via.placeholder.com/80x100.png?text=PDF" alt="Aperçu PDF">
+          <div class="bloc-info">
+            <strong>${bloc.titre}</strong><br>
+            Durée : ${bloc.duree} min<br>
+            Objectifs : ${bloc.objectifs.join(", ")}
+          </div>
+          <button onclick="remplacerBloc(${seance.indexOf(bloc)})">🔁 Changer</button>
+        `;
+        section.appendChild(div);
+      });
+      container.appendChild(section);
+    }
+  }
+}
+
+function remplacerBloc(index) {
+  const bloc = seance[index];
+  const candidats = exercices.filter(ex => ex.type === bloc.type && ex !== bloc && config.objectifs.some(o => ex.objectifs.includes(o)));
+  const nouveau = candidats[Math.floor(Math.random() * candidats.length)];
+  if (nouveau) {
+    seance[index] = nouveau;
+    localStorage.setItem("seance", JSON.stringify(seance));
+    afficherSeance();
+  }
+}
+
+function modifier() {
+  window.location.href = "index.html";
+}
+
+function demarrer() {
+  window.location.href = "lecture.html";
+}
+
+genererSeance();
+afficherSeance();
+</script>
+</body>
+</html>
