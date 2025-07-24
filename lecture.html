@@ -40,127 +40,122 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-</script>
 
-    const blocs = JSON.parse(localStorage.getItem("seance") || "[]");
-    const container = document.getElementById('pdf-container');
-    const timerEl = document.getElementById('timer');
+  const blocs = JSON.parse(localStorage.getItem("seance") || "[]");
+  const container = document.getElementById('pdf-container');
+  const timerEl = document.getElementById('timer');
 
-    let current = 0;
-    let pageRendering = false;
-    let pdfDoc = null;
-    let pageNum = 1;
-    let timerInterval;
-    let dragOffset = {x:0, y:0};
-    let isDragging = false;
+  let current = 0;
+  let pageRendering = false;
+  let pdfDoc = null;
+  let pageNum = 1;
+  let timerInterval;
+  let dragOffset = {x:0, y:0};
+  let isDragging = false;
 
-    const messages = [
-      "Pense à relâcher les épaules.",
-      "Souffle. Respire avec ton geste.",
-      "Moins de pression, plus d'élan.",
-      "La précision vient avec la lenteur.",
-      "Un bon trille est un trille détendu.",
-      "Ne serre pas l’archet avec le pouce.",
-      "Joue pour écouter, pas pour produire.",
-      "Le vibrato n’est pas un sauvetage."
-    ];
+  const messages = [
+    "Pense à relâcher les épaules.",
+    "Souffle. Respire avec ton geste.",
+    "Moins de pression, plus d'élan.",
+    "La précision vient avec la lenteur.",
+    "Un bon trille est un trille détendu.",
+    "Ne serre pas l’archet avec le pouce.",
+    "Joue pour écouter, pas pour produire.",
+    "Le vibrato n’est pas un sauvetage."
+  ];
 
-    function showPause(duration) {
-      container.innerHTML = '<div id="pause-message"></div>';
-      const msgDiv = document.getElementById('pause-message');
-      let elapsed = 0;
-      function rotateMessage() {
-        msgDiv.textContent = messages[Math.floor(Math.random() * messages.length)];
-      }
+  function showPause(duration) {
+    container.innerHTML = '<div id="pause-message"></div>';
+    const msgDiv = document.getElementById('pause-message');
+    let elapsed = 0;
+    function rotateMessage() {
+      msgDiv.textContent = messages[Math.floor(Math.random() * messages.length)];
+    }
+    rotateMessage();
+    const pauseInt = setInterval(() => {
+      elapsed += 10;
       rotateMessage();
-      const pauseInt = setInterval(() => {
-        elapsed += 10;
-        rotateMessage();
-        if (elapsed >= duration * 1000) {
-          clearInterval(pauseInt);
-          current++;
-          loadNext();
-        }
-      }, 10000);
-    }
+      if (elapsed >= duration * 1000) {
+        clearInterval(pauseInt);
+        current++;
+        loadNext();
+      }
+    }, 10000);
+  }
 
-    function startTimer(duration, callback) {
-      let remaining = duration;
+  function startTimer(duration, callback) {
+    let remaining = duration;
+    timerEl.textContent = formatTime(remaining);
+    timerInterval = setInterval(() => {
+      remaining--;
       timerEl.textContent = formatTime(remaining);
-      timerInterval = setInterval(() => {
-        remaining--;
-        timerEl.textContent = formatTime(remaining);
-        if (remaining <= 0) {
-          clearInterval(timerInterval);
-          callback();
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        callback();
+      }
+    }, 1000);
+  }
+
+  function formatTime(s) {
+    const min = Math.floor(s / 60);
+    const sec = s % 60;
+    return min + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
+  function renderPage(pdf, pageNum) {
+    pdf.getPage(pageNum).then(page => {
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      container.innerHTML = '';
+      container.appendChild(canvas);
+      const renderContext = { canvasContext: ctx, viewport: viewport };
+      page.render(renderContext);
+    });
+  }
+
+  function loadNext() {
+    if (current >= blocs.length) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    const bloc = blocs[current];
+    if (bloc.type === "pause") {
+      showPause(bloc.duree * 60);
+      return;
+    }
+
+    pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
+      pdfDoc = pdf;
+      renderPage(pdfDoc, 1);
+      startTimer(bloc.duree * 60, () => {
+        current++;
+        if (current < blocs.length) {
+          blocs.splice(current, 0, { type: "pause", duree: 2 });
         }
-      }, 1000);
-    }
-
-    function formatTime(s) {
-      const min = Math.floor(s / 60);
-      const sec = s % 60;
-      return min + ":" + (sec < 10 ? "0" : "") + sec;
-    }
-
-    function renderPage(pdf, pageNum) {
-      pdf.getPage(pageNum).then(page => {
-        const viewport = page.getViewport({ scale: 1.5 });
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        container.innerHTML = '';
-        container.appendChild(canvas);
-        const renderContext = { canvasContext: ctx, viewport: viewport };
-        page.render(renderContext);
+        loadNext();
       });
+    });
+  }
+
+  timerEl.addEventListener("mousedown", e => {
+    isDragging = true;
+    dragOffset.x = e.clientX - timerEl.offsetLeft;
+    dragOffset.y = e.clientY - timerEl.offsetTop;
+  });
+  document.addEventListener("mousemove", e => {
+    if (isDragging) {
+      timerEl.style.left = (e.clientX - dragOffset.x) + "px";
+      timerEl.style.top = (e.clientY - dragOffset.y) + "px";
     }
+  });
+  document.addEventListener("mouseup", () => isDragging = false);
 
-    function loadNext() {
-      if (current >= blocs.length) {
-        window.location.href = "index.html";
-        return;
-      }
-
-      const bloc = blocs[current];
-      if (bloc.type === "pause") {
-        showPause(bloc.duree * 60);
-        return;
-      }
-
-      pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
-        pdfDoc = pdf;
-        renderPage(pdfDoc, 1);
-        startTimer(bloc.duree * 60, () => {
-          current++;
-          // Ajoute une pause automatique entre les blocs (sauf à la fin)
-          if (current < blocs.length) {
-            blocs.splice(current, 0, { type: "pause", duree: 2 });
-          }
-          loadNext();
-        });
-      });
-    }
-
-    // drag timer
-    timerEl.addEventListener("mousedown", e => {
-      isDragging = true;
-      dragOffset.x = e.clientX - timerEl.offsetLeft;
-      dragOffset.y = e.clientY - timerEl.offsetTop;
-    });
-    document.addEventListener("mousemove", e => {
-      if (isDragging) {
-        timerEl.style.left = (e.clientX - dragOffset.x) + "px";
-        timerEl.style.top = (e.clientY - dragOffset.y) + "px";
-      }
-    });
-    document.addEventListener("mouseup", () => isDragging = false);
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.body.requestFullscreen?.();
-      loadNext();
-    });
-  </script>
-</body>
-</html>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.body.requestFullscreen?.();
+    loadNext();
+  });
+</script>
