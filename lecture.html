@@ -232,6 +232,7 @@
         window.location.href = "index.html";
         return;
       }
+blocs[current].type = blocs[current].type.trim().toLowerCase().replace(/\s+/g, "-");
 
       const bloc = blocs[current];
       
