@@ -189,6 +189,15 @@ setInterval(() => rotateMessage(), 10000);
         canvas.width = viewport.width;
         container.innerHTML = '';
         container.appendChild(canvas);
+        const control = document.createElement("div");
+control.style.textAlign = "center";
+control.innerHTML = `
+  <div style="margin-top: 1rem;">
+    <button onclick="skipSegment()">Passer au segment suivant</button>
+    <button onclick="endSession()" style="margin-left: 1rem;">Quitter la séance</button>
+  </div>
+`;
+container.appendChild(control);
         const renderContext = { canvasContext: ctx, viewport: viewport };
         page.render(renderContext);
       });
