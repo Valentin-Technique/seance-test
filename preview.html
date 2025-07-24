@@ -1,176 +1,156 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aperçu de la séance</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
+      font-family: "IBM Plex Sans", sans-serif;
+      background-color: #f5f5f5;
       margin: 0;
       padding: 2rem;
-      font-family: 'IBM Plex Sans', sans-serif;
-      background-color: #111;
-      color: white;
+      color: #222;
     }
     h1 {
-      text-align: center;
-      margin-bottom: 2rem;
+      font-size: 2rem;
+      margin-bottom: 1rem;
     }
-    .bloc {
-      background-color: #222;
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    }
-    .bloc h2 {
-      margin-top: 0;
-    }
-    .bloc img {
-      max-width: 150px;
-      border-radius: 4px;
+    .block {
       background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
     }
-    .bloc-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
+    .block-title {
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
     }
-    .bloc-info {
-      flex: 1;
+    .block-duration {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 0.5rem;
     }
-    .bloc-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    .pdf-thumbnail {
+      max-width: 100px;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .block-buttons {
+      margin-top: 0.5rem;
     }
     button {
-      background-color: #333;
+      font-family: inherit;
+      background: #222;
       color: white;
-      border: 1px solid #555;
-      border-radius: 6px;
-      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.8rem;
       cursor: pointer;
-      font-family: 'IBM Plex Sans', sans-serif;
-      font-size: 14px;
-      transition: background-color 0.2s, transform 0.2s;
     }
     button:hover {
-      background-color: #555;
-      transform: scale(1.05);
+      background: #444;
     }
-    #footer {
-      text-align: center;
-      margin-top: 3rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
+    .pause-block {
+      font-style: italic;
+      color: #777;
     }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
-  <h1>Prévisualisation de la séance</h1>
-  <div id="contenu"></div>
+  <h1>Aperçu de la séance générée</h1>
+  <div id="previewContainer"></div>
 
-  <div id="footer">
-    <button onclick="retour()">Modifier les critères</button>
-    <button onclick="demarrer()">Démarrer la séance</button>
-  </div>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>
-    const blocs = JSON.parse(localStorage.getItem("seance") || "[]");
-    const inclureSonsFiles = JSON.parse(localStorage.getItem("inclureSonsFiles") || "false");
-    const container = document.getElementById('contenu');
+    const sessionData = JSON.parse(localStorage.getItem("generatedSession")) || [];
+    const includeSonsFiles = localStorage.getItem("includeSonsFiles") === "true";
+    const container = document.getElementById("previewContainer");
 
-    function createBloc(bloc, index) {
-      const div = document.createElement('div');
-      div.className = 'bloc';
+    function createBlockElement(block, index) {
+      const div = document.createElement("div");
+      div.className = "block";
 
-      if (bloc.type === "sons_files") {
-        div.innerHTML = `
-          <h2>Sons filés (10 minutes)</h2>
-          <div class="bloc-content">
-            <div class="bloc-info">
-              <p>Ce bloc spécial ouvre la séance. Aucun fichier PDF n’est associé.</p>
-            </div>
-          </div>`;
-        container.appendChild(div);
-        return;
+      const title = document.createElement("div");
+      title.className = "block-title";
+
+      const duration = document.createElement("div");
+      duration.className = "block-duration";
+
+      title.textContent = block.type === "pause" ? "Pause" :
+                          block.type === "sons-filés" ? "Sons filés" :
+                          block.title;
+
+      duration.textContent = block.type === "pause"
+        ? "Durée : 2 min"
+        : block.type === "sons-filés"
+        ? "Durée : 10 min"
+        : `Durée : ${block.duration} min`;
+
+      div.appendChild(title);
+      div.appendChild(duration);
+
+      if (block.type === "pause") {
+        const pauseText = document.createElement("div");
+        pauseText.className = "pause-block";
+        pauseText.textContent = "Temps de repos";
+        div.appendChild(pauseText);
+        return div;
       }
 
-      const titre = bloc.titre || "Sans titre";
-      const duree = bloc.duree + " min";
-      const objectifs = bloc.objectifs?.join(", ") || "—";
-      const pdf = bloc.pdf;
+      if (block.type === "sons-filés") {
+        return div; // rien d'autre à afficher
+      }
 
-      const blocEl = document.createElement('div');
-      blocEl.className = 'bloc';
+      // Miniature PDF
+      const canvas = document.createElement("canvas");
+      canvas.className = "pdf-thumbnail";
+      div.appendChild(canvas);
 
-      blocEl.innerHTML = `
-        <h2>${bloc.type.charAt(0).toUpperCase() + bloc.type.slice(1)}</h2>
-        <div class="bloc-content">
-          <canvas id="thumb-${index}" width="150" height="200"></canvas>
-          <div class="bloc-info">
-            <p><strong>${titre}</strong></p>
-            <p>Durée : ${duree}</p>
-            <p>Objectifs : ${objectifs}</p>
-          </div>
-          <div class="bloc-actions">
-            <button onclick="changer(${index})">Changer</button>
-          </div>
-        </div>
-      `;
+      const loadingTask = pdfjsLib.getDocument(block.pdf);
+      loadingTask.promise.then(pdf => {
+        pdf.getPage(1).then(page => {
+          const scale = 0.3;
+          const viewport = page.getViewport({ scale });
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
 
-      container.appendChild(blocEl);
-
-      if (pdf) {
-        const canvas = blocEl.querySelector("canvas");
-        pdfjsLib.getDocument(pdf).promise.then(doc => {
-          doc.getPage(1).then(page => {
-            const scale = 0.5;
-            const viewport = page.getViewport({ scale });
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            page.render({ canvasContext: context, viewport });
-          });
-        }).catch(err => {
-          canvas.outerHTML = "<p>PDF introuvable</p>";
+          const renderContext = {
+            canvasContext: canvas.getContext("2d"),
+            viewport: viewport
+          };
+          page.render(renderContext);
         });
-      }
+      });
+
+      const buttons = document.createElement("div");
+      buttons.className = "block-buttons";
+
+      const shuffleBtn = document.createElement("button");
+      shuffleBtn.textContent = "Changer d’exercice";
+      shuffleBtn.onclick = () => {
+        // Recharge la page pour déclencher une nouvelle sélection aléatoire
+        location.reload();
+      };
+      buttons.appendChild(shuffleBtn);
+      div.appendChild(buttons);
+
+      return div;
     }
 
-    function renderAll() {
-      container.innerHTML = "";
-
-      if (inclureSonsFiles) {
-        createBloc({ type: "sons_files" }, -1);
-      }
-
-      blocs.forEach((bloc, i) => createBloc(bloc, i));
+    if (includeSonsFiles) {
+      const sonsF = {
+        type: "sons-filés"
+      };
+      container.appendChild(createBlockElement(sonsF));
     }
 
-    function changer(index) {
-      const bloc = blocs[index];
-      const memesTypes = blocs.filter(b => b.type === bloc.type && b !== bloc);
-      if (memesTypes.length === 0) return alert("Pas d'alternative disponible.");
-      const autre = memesTypes[Math.floor(Math.random() * memesTypes.length)];
-      blocs[index] = autre;
-      localStorage.setItem("seance", JSON.stringify(blocs));
-      renderAll();
-    }
-
-    function retour() {
-      window.location.href = "index.html";
-    }
-
-    function demarrer() {
-      window.location.href = "lecture.html";
-    }
-
-    renderAll();
+    sessionData.forEach((block, i) => {
+      container.appendChild(createBlockElement(block, i));
+    });
   </script>
 </body>
 </html>
