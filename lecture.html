@@ -93,7 +93,7 @@
   <div id="control-bar">
     <button onclick="endSession()">Terminer la séance</button>
     <button onclick="prevSegment()">Segment précédent</button>
-    <button onclick="skipSegment()">Passer le segment</button>
+    <button onclick="skipSegment()">Segment suivant</button>
   </div>
   <div id="pdf-container"></div>
   <div id="nav-bar">
@@ -236,9 +236,6 @@
         renderPage(pdfDoc, pageNum);
         startTimer(bloc.duree * 60, () => {
           current++;
-          if (current < blocs.length) {
-            blocs.splice(current, 0, { type: "pause", duree: 2 });
-          }
           loadNext();
         });
       });
