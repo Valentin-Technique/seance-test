@@ -280,12 +280,17 @@ container.className = "";
         pageNum = 1;
         renderPage(pdfDoc, pageNum);
         startTimer(bloc.duree * 60, () => {
-          current++;
-          if (current < blocs.length) {
-            blocs.splice(current, 0, { type: "pause", duree: 2 });
-          }
-          loadNext();
-        });
+  current++;
+  if (current < blocs.length) {
+    const next = blocs[current];
+    const isCurrentWork = bloc.type !== "pause" && bloc.type !== "sons-filés";
+    const isNextWork = next.type !== "pause" && next.type !== "sons-filés";
+    if (isCurrentWork && isNextWork) {
+      blocs.splice(current, 0, { type: "pause", duree: 2 });
+    }
+  }
+  loadNext();
+});
       });
     }
 
