@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aperçu de la séance</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: "IBM Plex Sans", sans-serif;
@@ -64,7 +63,7 @@
   <h1>Aperçu de la séance générée</h1>
   <div id="previewContainer"></div>
 
-  <!-- Import PDF.js -->
+  <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
@@ -107,7 +106,7 @@
       }
 
       if (block.type === "sons-filés") {
-        return div; // bloc spécial : pas de PDF ni bouton
+        return div; // Pas de PDF, pas de bouton
       }
 
       // Miniature PDF
@@ -137,7 +136,6 @@
       const shuffleBtn = document.createElement("button");
       shuffleBtn.textContent = "Changer d’exercice";
       shuffleBtn.onclick = () => {
-        // Recharge la page pour une nouvelle sélection aléatoire
         location.reload();
       };
       buttons.appendChild(shuffleBtn);
