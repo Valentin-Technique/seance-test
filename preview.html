@@ -1,62 +1,119 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Aperçu de la séance</title>
   <style>
-    .bloc {
-      border: 1px solid #ccc;
-      margin: 1em;
-      padding: 1em;
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: #111;
+      color: white;
+      margin: 0;
+      padding: 2em;
     }
-    iframe {
-      width: 100px;
-      height: 130px;
-      border: none;
+    h1 {
+      font-size: 2em;
+      margin-bottom: 1em;
+    }
+    .bloc {
+      background: #222;
+      border: 1px solid #444;
+      padding: 1em;
+      margin-bottom: 1em;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 1em;
+    }
+    .bloc img {
+      height: 100px;
+      border: 1px solid #666;
+    }
+    .infos {
+      flex: 1;
+    }
+    .actions button {
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      padding: 0.5em 1em;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .actions button:hover {
+      background: #555;
+    }
+    #footer-buttons {
+      margin-top: 2em;
+      display: flex;
+      gap: 1em;
     }
   </style>
 </head>
 <body>
-  <h1>Aperçu de la séance</h1>
-  <div id="preview"></div>
-  <button onclick="window.location.href='index.html'">Modifier les critères</button>
-  <button onclick="window.location.href='lecture.html'">Démarrer la séance</button>
+  <h1>Aperçu de votre séance</h1>
+  <div id="blocs"></div>
+  <div id="footer-buttons">
+    <button onclick="window.location.href='index.html'">Modifier les critères</button>
+    <button onclick="window.location.href='lecture.html'">Démarrer la séance</button>
+  </div>
 
-  <script>
-    const blocs = JSON.parse(localStorage.getItem("seance") || "[]");
+<script>
+  const pdfs = {
+    "sons_files_1.pdf": "Sons filés",
+    "gammes_3oct.pdf": "Gammes 3 octaves",
+    "feuillard_32.pdf": "Feuillard #32",
+    "trilles_double.pdf": "Trilles doubles",
+    "lee_9.pdf": "Lee #9",
+    "popper_6.pdf": "Popper #6",
+    "bach_sarabande.pdf": "Bach Sarabande",
+    "faure_elegie.pdf": "Fauré Élégie"
+  };
 
-    function changer(index) {
-      const type = blocs[index].type;
-      const candidats = exercicesDisponibles.filter(e => e.type === type && e.pdf !== blocs[index].pdf);
-      if (candidats.length > 0) {
-        const nouveau = candidats[Math.floor(Math.random() * candidats.length)];
-        blocs[index] = { ...nouveau, duree: blocs[index].duree };
-        localStorage.setItem("seance", JSON.stringify(blocs));
-        location.reload();
-      }
+  const blocsOriginaux = JSON.parse(localStorage.getItem("seance") || "[]");
+  const blocs = [];
+  for (let i = 0; i < blocsOriginaux.length; i++) {
+    blocs.push(blocsOriginaux[i]);
+    if (i < blocsOriginaux.length - 1) {
+      blocs.push({ type: "pause", duree: 2 });
+    }
+  }
+  localStorage.setItem("seance", JSON.stringify(blocs));
+
+  const container = document.getElementById("blocs");
+
+  blocs.forEach((bloc, i) => {
+    const div = document.createElement("div");
+    div.className = "bloc";
+
+    if (bloc.type === "pause") {
+      div.innerHTML = `
+        <div class="infos">
+          <strong>Pause</strong><br>
+          Durée : ${bloc.duree} min
+        </div>
+      `;
+    } else {
+      const img = document.createElement("img");
+      img.src = `miniatures/${bloc.pdf.replace(".pdf", ".png")}`;
+      const infos = document.createElement("div");
+      infos.className = "infos";
+      infos.innerHTML = `<strong>${pdfs[bloc.pdf] || bloc.pdf}</strong><br>Durée : ${bloc.duree} min`;
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+      const changeBtn = document.createElement("button");
+      changeBtn.textContent = "Changer";
+      changeBtn.onclick = () => alert("Fonction de remplacement à implémenter");
+      actions.appendChild(changeBtn);
+
+      div.appendChild(img);
+      div.appendChild(infos);
+      div.appendChild(actions);
     }
 
-    const exercicesDisponibles = [
-      { type: "sons filés", titre: "Sons filés 1", pdf: "sons_files_1.pdf", objectifs: ["intonation"] },
-      { type: "gammes", titre: "Gammes 3 octaves", pdf: "gammes_3oct.pdf", objectifs: ["intonation", "vitesse"] },
-      { type: "exercice", titre: "Feuillard 32", pdf: "feuillard_32.pdf", objectifs: ["agilite"] },
-      { type: "etude", titre: "Popper 6", pdf: "popper_6.pdf", objectifs: ["vitesse"] },
-      { type: "repertoire", titre: "Bach Sarabande", pdf: "bach_sarabande.pdf", objectifs: ["intonation"] }
-    ];
-
-    const container = document.getElementById("preview");
-    blocs.forEach((bloc, i) => {
-      const div = document.createElement("div");
-      div.className = "bloc";
-      div.innerHTML = `
-        <h2>${bloc.type.toUpperCase()} – ${bloc.titre}</h2>
-        <p>Durée : ${bloc.duree} min</p>
-        <p>Objectif(s) : ${bloc.objectifs ? bloc.objectifs.join(", ") : ""}</p>
-        <iframe src="${bloc.pdf}#page=1"></iframe><br>
-        <button onclick="changer(${i})">Changer</button>
-      `;
-      container.appendChild(div);
-    });
-  </script>
+    container.appendChild(div);
+  });
+</script>
 </body>
 </html>
