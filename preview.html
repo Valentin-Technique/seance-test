@@ -64,7 +64,12 @@
   <h1>Aperçu de la séance générée</h1>
   <div id="previewContainer"></div>
 
+  <!-- Import PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+  </script>
+
   <script>
     const sessionData = JSON.parse(localStorage.getItem("generatedSession")) || [];
     const includeSonsFiles = localStorage.getItem("includeSonsFiles") === "true";
@@ -102,7 +107,7 @@
       }
 
       if (block.type === "sons-filés") {
-        return div; // rien d'autre à afficher
+        return div; // bloc spécial : pas de PDF ni bouton
       }
 
       // Miniature PDF
@@ -132,7 +137,7 @@
       const shuffleBtn = document.createElement("button");
       shuffleBtn.textContent = "Changer d’exercice";
       shuffleBtn.onclick = () => {
-        // Recharge la page pour déclencher une nouvelle sélection aléatoire
+        // Recharge la page pour une nouvelle sélection aléatoire
         location.reload();
       };
       buttons.appendChild(shuffleBtn);
