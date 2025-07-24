@@ -235,6 +235,8 @@
 
       const bloc = blocs[current];
       
+      console.log("Type du bloc :", bloc.type);
+
       if (bloc.type === "pause") {
         showPause(bloc.duree * 60); // toujours 2 minutes
         return;
