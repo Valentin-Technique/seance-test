@@ -184,6 +184,10 @@
     sessionWithPauses.forEach(block => {
       container.appendChild(createBlockElement(block));
     });
+sessionWithPauses.forEach(bloc => {
+  bloc.type = bloc.type.trim().toLowerCase().replace(/\s+/g, "-");
+});
+localStorage.setItem("seance", JSON.stringify(sessionWithPauses));
   </script>
 </body>
 </html>
