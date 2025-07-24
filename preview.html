@@ -1,3 +1,4 @@
+<!-- Remplace tout ton fichier preview.html par ceci -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -106,29 +107,31 @@
       }
 
       if (block.type === "sons-filés") {
-        return div; // Pas de PDF, pas de bouton
+        return div; // Pas de PDF ni bouton
       }
 
-      // Miniature PDF
-      const canvas = document.createElement("canvas");
-      canvas.className = "pdf-thumbnail";
-      div.appendChild(canvas);
+      if (block.pdf) {
+        // Miniature PDF
+        const canvas = document.createElement("canvas");
+        canvas.className = "pdf-thumbnail";
+        div.appendChild(canvas);
 
-      const loadingTask = pdfjsLib.getDocument(block.pdf);
-      loadingTask.promise.then(pdf => {
-        pdf.getPage(1).then(page => {
-          const scale = 0.3;
-          const viewport = page.getViewport({ scale });
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
+        const loadingTask = pdfjsLib.getDocument(block.pdf);
+        loadingTask.promise.then(pdf => {
+          pdf.getPage(1).then(page => {
+            const scale = 0.3;
+            const viewport = page.getViewport({ scale });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
 
-          const renderContext = {
-            canvasContext: canvas.getContext("2d"),
-            viewport: viewport
-          };
-          page.render(renderContext);
+            const renderContext = {
+              canvasContext: canvas.getContext("2d"),
+              viewport: viewport
+            };
+            page.render(renderContext);
+          });
         });
-      });
+      }
 
       const buttons = document.createElement("div");
       buttons.className = "block-buttons";
