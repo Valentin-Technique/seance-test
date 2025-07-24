@@ -240,7 +240,9 @@
         return;
       }
 if (bloc.type === "sons-filés") {
-  container.className = "sonsf";
+timerEl.style.display = "none";
+document.getElementById("nav-bar").style.display = "none";
+container.className = "sonsf";
   container.innerHTML = `
     <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
       <div id="sons-timer" style="font-size: 10rem; font-weight: bold; margin-bottom: 3rem;">10:00</div>
@@ -271,6 +273,9 @@ if (bloc.type === "sons-filés") {
 }
 
       pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
+        timerEl.style.display = "block";
+document.getElementById("nav-bar").style.display = "flex";
+container.className = "";
         pdfDoc = pdf;
         pageNum = 1;
         renderPage(pdfDoc, pageNum);
