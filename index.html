@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Générateur de séance</title>
+</head>
+<body>
+  <h1>Générer une séance</h1>
+  <label>Durée de la séance :
+    <select id="duree">
+      <option value="30">30 min</option>
+      <option value="60" selected>60 min</option>
+      <option value="90">90 min</option>
+    </select>
+  </label><br>
+  <label><input type="checkbox" id="sonsFiles" /> Inclure sons filés</label><br>
+  <label>Objectifs :
+    <select multiple id="objectifs">
+      <option value="agilite">Agilité</option>
+      <option value="vitesse">Vitesse</option>
+      <option value="intonation">Intonation</option>
+    </select>
+  </label><br>
+  <button onclick="generer()">Générer la séance</button>
+
+  <script>
+    const exercicesDisponibles = [
+      { type: "sons filés", titre: "Sons filés 1", pdf: "sons_files_1.pdf", objectifs: ["intonation"] },
+      { type: "gammes", titre: "Gammes 3 octaves", pdf: "gammes_3oct.pdf", objectifs: ["intonation", "vitesse"] },
+      { type: "exercice", titre: "Feuillard 32", pdf: "feuillard_32.pdf", objectifs: ["agilite"] },
+      { type: "etude", titre: "Popper 6", pdf: "popper_6.pdf", objectifs: ["vitesse"] },
+      { type: "repertoire", titre: "Bach Sarabande", pdf: "bach_sarabande.pdf", objectifs: ["intonation"] }
+    ];
+
+    function generer() {
+      const dureeTotale = parseInt(document.getElementById("duree").value);
+      const objectifs = Array.from(document.getElementById("objectifs").selectedOptions).map(o => o.value);
+      const sonsFiles = document.getElementById("sonsFiles").checked;
+
+      const repartition = {
+        "sons filés": sonsFiles ? 10 : 0,
+        "gammes": 10,
+        "exercice": 30,
+        "etude": 30,
+        "repertoire": 20
+      };
+
+      let blocs = [];
+      if (sonsFiles) {
+        const exo = exercicesDisponibles.find(e => e.type === "sons filés");
+        blocs.push({ ...exo, duree: 10 });
+      }
+
+      for (const [type, pourcentage] of Object.entries(repartition)) {
+        if (type === "sons filés" && !sonsFiles) continue;
+        const dureeBloc = Math.round((dureeTotale * pourcentage) / 100);
+        const candidates = exercicesDisponibles.filter(e => e.type === type);
+        if (candidates.length) {
+          const selection = candidates[Math.floor(Math.random() * candidates.length)];
+          blocs.push({ ...selection, duree: dureeBloc });
+        }
+      }
+
+      localStorage.setItem("seance", JSON.stringify(blocs));
+      window.location.href = "preview.html";
+    }
+  </script>
+</body>
+</html>
