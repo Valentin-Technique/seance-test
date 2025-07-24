@@ -248,12 +248,11 @@
         document.getElementById("nav-bar").style.display = "none";
         container.className = "sonsf";
         container.innerHTML = `
-          <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
-            <div id="sons-timer" style="font-size: 10rem; font-weight: bold;">10:00</div>
-            <button onclick="skipSegment()" style="margin-top:2rem; padding:1rem 2rem; font-size:1.2rem;">Segment suivant</button>
-            <button onclick="endSession()" style="margin-top:1rem; padding:0.5rem 1.2rem;">Quitter la séance</button>
-          </div>
-        `;
+  <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
+    <div id="sons-timer" style="font-size: 10rem; font-weight: bold;">10:00</div>
+  </div>
+`;
+
 
         let time = 10 * 60;
         const timerDisplay = document.getElementById("sons-timer");
