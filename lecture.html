@@ -2,118 +2,270 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Aperçu de la séance</title>
+  <title>Lecture de séance</title>
   <style>
-    body {
-      font-family: 'IBM Plex Sans', sans-serif;
-      background: #111;
-      color: white;
+    html, body {
       margin: 0;
-      padding: 2em;
+      padding: 0;
+      background: black;
+      color: white;
+      overflow: hidden;
+      height: 100%;
+      font-family: 'IBM Plex Sans', sans-serif;
     }
-    h1 {
-      font-size: 2em;
-      margin-bottom: 1em;
-    }
-    .bloc {
-      background: #222;
-      border: 1px solid #444;
-      padding: 1em;
-      margin-bottom: 1em;
-      border-radius: 8px;
+    #pdf-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      overflow: auto;
       display: flex;
-      align-items: center;
-      gap: 1em;
+      align-items: start;
+      justify-content: center;
     }
-    .bloc img {
-      height: 100px;
-      border: 1px solid #666;
+    canvas {
+      display: block;
+      margin: auto;
     }
-    .infos {
-      flex: 1;
+    #timer {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(50, 50, 50, 0.85);
+      color: white;
+      padding: 25px 40px;
+      border-radius: 12px;
+      z-index: 30;
+      cursor: grab;
+      font-size: 32px;
+      text-align: center;
+      font-family: 'IBM Plex Sans', sans-serif;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
-    .actions button {
-      background: #333;
+    #pause-message {
+      font-size: 2em;
+      text-align: center;
+      padding-top: 40vh;
+      z-index: 5;
+      position: relative;
+    }
+    #nav-bar {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(40, 40, 40, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 25;
+      display: flex;
+      gap: 10px;
+    }
+    #nav-bar button, #control-bar button {
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #222;
       color: white;
       border: 1px solid #555;
-      padding: 0.5em 1em;
-      border-radius: 4px;
-      cursor: pointer;
+      border-radius: 6px;
+      font-family: 'IBM Plex Sans', sans-serif;
+      transition: background-color 0.2s, transform 0.2s;
     }
-    .actions button:hover {
-      background: #555;
+    #nav-bar button:hover, #control-bar button:hover {
+      background-color: #555;
+      transform: scale(1.05);
     }
-    #footer-buttons {
-      margin-top: 2em;
+    #control-bar {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 25;
       display: flex;
-      gap: 1em;
+      gap: 10px;
     }
   </style>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Aperçu de votre séance</h1>
-  <div id="blocs"></div>
-  <div id="footer-buttons">
-    <button onclick="window.location.href='index.html'">Modifier les critères</button>
-    <button onclick="window.location.href='lecture.html'">Démarrer la séance</button>
+  <div id="timer"></div>
+  <div id="control-bar">
+    <button onclick="endSession()">Terminer la séance</button>
+    <button onclick="prevSegment()">Segment précédent</button>
+    <button onclick="skipSegment()">Passer le segment</button>
+  </div>
+  <div id="pdf-container"></div>
+  <div id="nav-bar">
+    <button onclick="changePage(-1)">⟵</button>
+    <button onclick="zoomOut()">➖</button>
+    <button onclick="zoomIn()">➕</button>
+    <button onclick="changePage(1)">⟶</button>
   </div>
 
-<script>
-  const pdfs = {
-    "sons_files_1.pdf": "Sons filés",
-    "gammes_3oct.pdf": "Gammes 3 octaves",
-    "feuillard_32.pdf": "Feuillard #32",
-    "trilles_double.pdf": "Trilles doubles",
-    "lee_9.pdf": "Lee #9",
-    "popper_6.pdf": "Popper #6",
-    "bach_sarabande.pdf": "Bach Sarabande",
-    "faure_elegie.pdf": "Fauré Élégie"
-  };
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-  const blocsOriginaux = JSON.parse(localStorage.getItem("seance") || "[]");
-  const blocs = [];
-  for (let i = 0; i < blocsOriginaux.length; i++) {
-    blocs.push(blocsOriginaux[i]);
-    if (i < blocsOriginaux.length - 1) {
-      blocs.push({ type: "pause", duree: 2 });
-    }
-  }
-  localStorage.setItem("seance", JSON.stringify(blocs));
+    const blocs = JSON.parse(localStorage.getItem("seance") || "[]");
+    const container = document.getElementById('pdf-container');
+    const timerEl = document.getElementById('timer');
 
-  const container = document.getElementById("blocs");
+    let current = 0;
+    let pdfDoc = null;
+    let pageNum = 1;
+    let scale = 1.5;
+    let timerInterval;
+    let dragOffset = {x:0, y:0};
+    let isDragging = false;
 
-  blocs.forEach((bloc, i) => {
-    const div = document.createElement("div");
-    div.className = "bloc";
+    const messages = [
+      "Pense à relâcher les épaules.",
+      "Souffle. Respire avec ton geste.",
+      "Moins de pression, plus d'élan.",
+      "La précision vient avec la lenteur.",
+      "Un bon trille est un trille détendu.",
+      "Ne serre pas l’archet avec le pouce.",
+      "Joue pour écouter, pas pour produire.",
+      "Le vibrato n’est pas un sauvetage."
+    ];
 
-    if (bloc.type === "pause") {
-      div.innerHTML = `
-        <div class="infos">
-          <strong>Pause</strong><br>
-          Durée : ${bloc.duree} min
-        </div>
-      `;
-    } else {
-      const img = document.createElement("img");
-      img.src = `miniatures/${bloc.pdf.replace(".pdf", ".png")}`;
-      const infos = document.createElement("div");
-      infos.className = "infos";
-      infos.innerHTML = `<strong>${pdfs[bloc.pdf] || bloc.pdf}</strong><br>Durée : ${bloc.duree} min`;
-
-      const actions = document.createElement("div");
-      actions.className = "actions";
-      const changeBtn = document.createElement("button");
-      changeBtn.textContent = "Changer";
-      changeBtn.onclick = () => alert("Fonction de remplacement à implémenter");
-      actions.appendChild(changeBtn);
-
-      div.appendChild(img);
-      div.appendChild(infos);
-      div.appendChild(actions);
+    function showPause(duration) {
+      container.innerHTML = '<div id="pause-message"></div>';
+      const msgDiv = document.getElementById('pause-message');
+      let elapsed = 0;
+      function rotateMessage() {
+        msgDiv.textContent = messages[Math.floor(Math.random() * messages.length)];
+      }
+      rotateMessage();
+      const pauseInt = setInterval(() => {
+        elapsed += 10;
+        rotateMessage();
+        if (elapsed >= duration * 1000) {
+          clearInterval(pauseInt);
+          current++;
+          loadNext();
+        }
+      }, 10000);
     }
 
-    container.appendChild(div);
-  });
-</script>
+    function startTimer(duration, callback) {
+      let remaining = duration;
+      timerEl.textContent = formatTime(remaining);
+      timerInterval = setInterval(() => {
+        remaining--;
+        timerEl.textContent = formatTime(remaining);
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          callback();
+        }
+      }, 1000);
+    }
+
+    function formatTime(s) {
+      const min = Math.floor(s / 60);
+      const sec = s % 60;
+      return min + ":" + (sec < 10 ? "0" : "") + sec;
+    }
+
+    function renderPage(pdf, num) {
+      pdf.getPage(num).then(page => {
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        container.innerHTML = '';
+        container.appendChild(canvas);
+        const renderContext = { canvasContext: ctx, viewport: viewport };
+        page.render(renderContext);
+      });
+    }
+
+    function changePage(offset) {
+      if (!pdfDoc) return;
+      const newPage = pageNum + offset;
+      if (newPage >= 1 && newPage <= pdfDoc.numPages) {
+        pageNum = newPage;
+        renderPage(pdfDoc, pageNum);
+      }
+    }
+
+    function zoomIn() {
+      scale += 0.25;
+      renderPage(pdfDoc, pageNum);
+    }
+
+    function zoomOut() {
+      scale = Math.max(0.5, scale - 0.25);
+      renderPage(pdfDoc, pageNum);
+    }
+
+    function endSession() {
+      clearInterval(timerInterval);
+      window.location.href = "index.html";
+    }
+
+    function skipSegment() {
+      clearInterval(timerInterval);
+      current++;
+      loadNext();
+    }
+
+    function prevSegment() {
+      clearInterval(timerInterval);
+      if (current > 0) current--;
+      loadNext();
+    }
+
+    function loadNext() {
+      if (current >= blocs.length) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const bloc = blocs[current];
+      if (bloc.type === "pause") {
+        showPause(bloc.duree * 60);
+        return;
+      }
+
+      pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
+        pdfDoc = pdf;
+        pageNum = 1;
+        renderPage(pdfDoc, pageNum);
+        startTimer(bloc.duree * 60, () => {
+          current++;
+          if (current < blocs.length) {
+            blocs.splice(current, 0, { type: "pause", duree: 2 });
+          }
+          loadNext();
+        });
+      });
+    }
+
+    timerEl.addEventListener("mousedown", e => {
+      isDragging = true;
+      dragOffset.x = e.clientX - timerEl.offsetLeft;
+      dragOffset.y = e.clientY - timerEl.offsetTop;
+    });
+    document.addEventListener("mousemove", e => {
+      if (isDragging) {
+        timerEl.style.left = (e.clientX - dragOffset.x) + "px";
+        timerEl.style.top = (e.clientY - dragOffset.y) + "px";
+      }
+    });
+    document.addEventListener("mouseup", () => isDragging = false);
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") changePage(1);
+      if (e.key === "ArrowLeft") changePage(-1);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.body.requestFullscreen?.().catch(() => {});
+      loadNext();
+    });
+  </script>
 </body>
 </html>
