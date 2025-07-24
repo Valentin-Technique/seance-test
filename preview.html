@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aperçu de la séance – mode test</title>
+  <title>Aperçu de la séance – test</title>
   <style>
     body {
       font-family: "IBM Plex Sans", sans-serif;
@@ -14,7 +14,7 @@
     }
     h1 {
       font-size: 2rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
     .block {
       background: white;
@@ -57,11 +57,21 @@
       font-style: italic;
       color: #777;
     }
+    .footer-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3rem;
+    }
   </style>
 </head>
 <body>
   <h1>Aperçu de la séance (mode test)</h1>
   <div id="previewContainer"></div>
+
+  <div class="footer-buttons">
+    <button onclick="window.location.href='index.html'">Revenir à l’éditeur</button>
+    <button onclick="window.location.href='lecture.html'">Démarrer la séance</button>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>
@@ -71,14 +81,12 @@
   <script>
     const container = document.getElementById("previewContainer");
 
-    const fakeSession = [
+    const testSession = [
       { type: "sons-filés" },
-      {
-        type: "exercice",
-        title: "Gammes tierces",
-        duration: 10,
-        pdf: "lee_9.pdf"
-      },
+      { type: "gammes", title: "Gammes 3 octaves", duration: 10, pdf: "gammes_3oct.pdf" },
+      { type: "exercice", title: "Lee 9", duration: 10, pdf: "lee_9.pdf" },
+      { type: "étude", title: "Feuillard 32", duration: 15, pdf: "feuillard_32.pdf" },
+      { type: "répertoire", title: "Fauré Élégie", duration: 15, pdf: "faure_elegie.pdf" },
       { type: "pause" }
     ];
 
@@ -143,14 +151,14 @@
       buttons.className = "block-buttons";
       const shuffleBtn = document.createElement("button");
       shuffleBtn.textContent = "Changer d’exercice";
-      shuffleBtn.onclick = () => location.reload();
+      shuffleBtn.onclick = () => location.reload(); // temporaire
       buttons.appendChild(shuffleBtn);
       div.appendChild(buttons);
 
       return div;
     }
 
-    fakeSession.forEach(block => {
+    testSession.forEach(block => {
       container.appendChild(createBlockElement(block));
     });
   </script>
