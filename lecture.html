@@ -20,6 +20,9 @@
       height: 100vh;
       z-index: 1;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     canvas {
       display: block;
@@ -45,11 +48,32 @@
       z-index: 5;
       position: relative;
     }
+    #nav-bar {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 15;
+    }
+    #nav-bar button {
+      margin: 0 5px;
+      padding: 5px 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div id="timer"></div>
   <div id="pdf-container"></div>
+  <div id="nav-bar">
+    <button onclick="changePage(-1)">⟵</button>
+    <button onclick="zoomOut()">➖</button>
+    <button onclick="zoomIn()">➕</button>
+    <button onclick="changePage(1)">⟶</button>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
@@ -61,6 +85,8 @@
 
     let current = 0;
     let pdfDoc = null;
+    let pageNum = 1;
+    let scale = 1.5;
     let timerInterval;
     let dragOffset = {x:0, y:0};
     let isDragging = false;
@@ -114,9 +140,9 @@
       return min + ":" + (sec < 10 ? "0" : "") + sec;
     }
 
-    function renderPage(pdf, pageNum) {
-      pdf.getPage(pageNum).then(page => {
-        const viewport = page.getViewport({ scale: 1.5 });
+    function renderPage(pdf, num) {
+      pdf.getPage(num).then(page => {
+        const viewport = page.getViewport({ scale });
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext('2d');
         canvas.height = viewport.height;
@@ -126,6 +152,25 @@
         const renderContext = { canvasContext: ctx, viewport: viewport };
         page.render(renderContext);
       });
+    }
+
+    function changePage(offset) {
+      if (!pdfDoc) return;
+      const newPage = pageNum + offset;
+      if (newPage >= 1 && newPage <= pdfDoc.numPages) {
+        pageNum = newPage;
+        renderPage(pdfDoc, pageNum);
+      }
+    }
+
+    function zoomIn() {
+      scale += 0.25;
+      renderPage(pdfDoc, pageNum);
+    }
+
+    function zoomOut() {
+      scale = Math.max(0.5, scale - 0.25);
+      renderPage(pdfDoc, pageNum);
     }
 
     function loadNext() {
@@ -142,7 +187,8 @@
 
       pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
         pdfDoc = pdf;
-        renderPage(pdfDoc, 1);
+        pageNum = 1;
+        renderPage(pdfDoc, pageNum);
         startTimer(bloc.duree * 60, () => {
           current++;
           if (current < blocs.length) {
@@ -153,7 +199,6 @@
       });
     }
 
-    // Drag timer (desktop only)
     timerEl.addEventListener("mousedown", e => {
       isDragging = true;
       dragOffset.x = e.clientX - timerEl.offsetLeft;
@@ -167,7 +212,11 @@
     });
     document.addEventListener("mouseup", () => isDragging = false);
 
-    // Auto fullscreen on interaction
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") changePage(1);
+      if (e.key === "ArrowLeft") changePage(-1);
+    });
+
     document.addEventListener("DOMContentLoaded", () => {
       document.body.requestFullscreen?.().catch(() => {});
       loadNext();
