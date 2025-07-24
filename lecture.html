@@ -30,12 +30,12 @@
       margin: auto;
     }
     #pdf-container.sonsf {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-direction: column;
-  background: black;
-}
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-direction: column;
+      background: black;
+    }
     #timer {
       position: fixed;
       top: 10px;
@@ -161,6 +161,7 @@
       clearInterval(timerInterval);
       let remaining = duration;
       timerEl.textContent = formatTime(remaining);
+      timerEl.style.display = "block";
       timerInterval = setInterval(() => {
         remaining--;
         timerEl.textContent = formatTime(remaining);
@@ -232,69 +233,61 @@
         window.location.href = "index.html";
         return;
       }
-blocs[current].type = blocs[current].type.trim().toLowerCase().replace(/\s+/g, "-");
 
       const bloc = blocs[current];
-      
-      console.log("Type du bloc :", bloc.type);
+      bloc.type = bloc.type.trim().toLowerCase().replace(/\s+/g, "-");
 
       if (bloc.type === "pause") {
-        showPause(bloc.duree * 60); // toujours 2 minutes
+        document.getElementById("nav-bar").style.display = "none";
+        showPause((bloc.duree || 2) * 60);
         return;
       }
-if (bloc.type === "sons-filés") {
-timerEl.style.display = "none";
-document.getElementById("nav-bar").style.display = "none";
-container.className = "sonsf";
- container.innerHTML = `
-  <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
-    <div id="sons-timer" style="font-size: 10rem; font-weight: bold;">10:00</div>
-  </div>
-`;
 
+      if (bloc.type === "sons-filés") {
+        timerEl.style.display = "none";
+        document.getElementById("nav-bar").style.display = "none";
+        container.className = "sonsf";
+        container.innerHTML = `
+          <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
+            <div id="sons-timer" style="font-size: 10rem; font-weight: bold;">10:00</div>
+            <button onclick="skipSegment()" style="margin-top:2rem; padding:1rem 2rem; font-size:1.2rem;">Segment suivant</button>
+            <button onclick="endSession()" style="margin-top:1rem; padding:0.5rem 1.2rem;">Quitter la séance</button>
+          </div>
+        `;
 
-  let time = 10 * 60;
-  const timerDisplay = document.getElementById("sons-timer");
+        let time = 10 * 60;
+        const timerDisplay = document.getElementById("sons-timer");
 
-  clearInterval(timerInterval);
-  timerEl.style.display = "none";
-  timerInterval = setInterval(() => {
-    time--;
-    const min = Math.floor(time / 60).toString().padStart(2, "0");
-    const sec = (time % 60).toString().padStart(2, "0");
-    timerDisplay.textContent = `${min}:${sec}`;
-    if (time <= 0) {
-      clearInterval(timerInterval);
-      current++;
-      loadNext();
-    }
-  }, 1000);
-  return;
-}
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          time--;
+          const min = Math.floor(time / 60).toString().padStart(2, "0");
+          const sec = (time % 60).toString().padStart(2, "0");
+          timerDisplay.textContent = `${min}:${sec}`;
+          if (time <= 0) {
+            clearInterval(timerInterval);
+            current++;
+            loadNext();
+          }
+        }, 1000);
+        return;
+      }
+
+      document.getElementById("nav-bar").style.display = "flex";
+      timerEl.style.display = "block";
+      container.className = "";
 
       pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
-        timerEl.style.display = "block";
-document.getElementById("nav-bar").style.display = "flex";
-container.className = "";
         pdfDoc = pdf;
         pageNum = 1;
         renderPage(pdfDoc, pageNum);
-        startTimer(bloc.duree * 60, () => {
-  current++;
-  if (current < blocs.length) {
-    const next = blocs[current];
-    const isCurrentWork = bloc.type !== "pause" && bloc.type !== "sons-filés";
-    const isNextWork = next.type !== "pause" && next.type !== "sons-filés";
-    if (isCurrentWork && isNextWork) {
-      blocs.splice(current, 0, { type: "pause", duree: 2 });
-    }
-  }
-  loadNext();
-});
+        startTimer((bloc.duree || 10) * 60, () => {
+          current++;
+          loadNext();
+        });
       });
     }
 
-    // Drag timer
     timerEl.addEventListener("mousedown", e => {
       isDragging = true;
       dragOffset.x = e.clientX - timerEl.offsetLeft;
@@ -308,7 +301,6 @@ container.className = "";
     });
     document.addEventListener("mouseup", () => isDragging = false);
 
-    // Clavier
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowRight") changePage(1);
       if (e.key === "ArrowLeft") changePage(-1);
