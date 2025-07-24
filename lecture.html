@@ -245,15 +245,12 @@ if (bloc.type === "sons-filés") {
 timerEl.style.display = "none";
 document.getElementById("nav-bar").style.display = "none";
 container.className = "sonsf";
-  container.innerHTML = `
-    <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
-      <div id="sons-timer" style="font-size: 10rem; font-weight: bold; margin-bottom: 3rem;">10:00</div>
-      <div style="display: flex; gap: 1rem;">
-        <button onclick="skipSegment()">Passer au segment suivant</button>
-        <button onclick="endSession()">Terminer la séance</button>
-      </div>
-    </div>
-  `;
+ container.innerHTML = `
+  <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
+    <div id="sons-timer" style="font-size: 10rem; font-weight: bold;">10:00</div>
+  </div>
+`;
+
 
   let time = 10 * 60;
   const timerDisplay = document.getElementById("sons-timer");
