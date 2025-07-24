@@ -1,10 +1,9 @@
-<!-- Remplace tout ton fichier preview.html par ceci -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aperçu de la séance</title>
+  <title>Aperçu de la séance – mode test</title>
   <style>
     body {
       font-family: "IBM Plex Sans", sans-serif;
@@ -61,34 +60,42 @@
   </style>
 </head>
 <body>
-  <h1>Aperçu de la séance générée</h1>
+  <h1>Aperçu de la séance (mode test)</h1>
   <div id="previewContainer"></div>
 
-  <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
   </script>
 
   <script>
-    const sessionData = JSON.parse(localStorage.getItem("generatedSession")) || [];
-    const includeSonsFiles = localStorage.getItem("includeSonsFiles") === "true";
     const container = document.getElementById("previewContainer");
 
-    function createBlockElement(block, index) {
+    const fakeSession = [
+      { type: "sons-filés" },
+      {
+        type: "exercice",
+        title: "Gammes tierces",
+        duration: 10,
+        pdf: "pdf/gammes-tierces.pdf"
+      },
+      { type: "pause" }
+    ];
+
+    function createBlockElement(block) {
       const div = document.createElement("div");
       div.className = "block";
 
       const title = document.createElement("div");
       title.className = "block-title";
+      title.textContent = block.type === "pause"
+        ? "Pause"
+        : block.type === "sons-filés"
+        ? "Sons filés"
+        : block.title;
 
       const duration = document.createElement("div");
       duration.className = "block-duration";
-
-      title.textContent = block.type === "pause" ? "Pause" :
-                          block.type === "sons-filés" ? "Sons filés" :
-                          block.title;
-
       duration.textContent = block.type === "pause"
         ? "Durée : 2 min"
         : block.type === "sons-filés"
@@ -107,11 +114,10 @@
       }
 
       if (block.type === "sons-filés") {
-        return div; // Pas de PDF ni bouton
+        return div;
       }
 
       if (block.pdf) {
-        // Miniature PDF
         const canvas = document.createElement("canvas");
         canvas.className = "pdf-thumbnail";
         div.appendChild(canvas);
@@ -135,27 +141,17 @@
 
       const buttons = document.createElement("div");
       buttons.className = "block-buttons";
-
       const shuffleBtn = document.createElement("button");
       shuffleBtn.textContent = "Changer d’exercice";
-      shuffleBtn.onclick = () => {
-        location.reload();
-      };
+      shuffleBtn.onclick = () => location.reload();
       buttons.appendChild(shuffleBtn);
       div.appendChild(buttons);
 
       return div;
     }
 
-    if (includeSonsFiles) {
-      const sonsF = {
-        type: "sons-filés"
-      };
-      container.appendChild(createBlockElement(sonsF));
-    }
-
-    sessionData.forEach((block, i) => {
-      container.appendChild(createBlockElement(block, i));
+    fakeSession.forEach(block => {
+      container.appendChild(createBlockElement(block));
     });
   </script>
 </body>
