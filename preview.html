@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Aperçu de la séance</title>
+  <style>
+    .bloc {
+      border: 1px solid #ccc;
+      margin: 1em;
+      padding: 1em;
+    }
+    iframe {
+      width: 100px;
+      height: 130px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Aperçu de la séance</h1>
+  <div id="preview"></div>
+  <button onclick="window.location.href='index.html'">Modifier les critères</button>
+  <button onclick="window.location.href='lecture.html'">Démarrer la séance</button>
+
+  <script>
+    const blocs = JSON.parse(localStorage.getItem("seance") || "[]");
+
+    function changer(index) {
+      const type = blocs[index].type;
+      const candidats = exercicesDisponibles.filter(e => e.type === type && e.pdf !== blocs[index].pdf);
+      if (candidats.length > 0) {
+        const nouveau = candidats[Math.floor(Math.random() * candidats.length)];
+        blocs[index] = { ...nouveau, duree: blocs[index].duree };
+        localStorage.setItem("seance", JSON.stringify(blocs));
+        location.reload();
+      }
+    }
+
+    const exercicesDisponibles = [
+      { type: "sons filés", titre: "Sons filés 1", pdf: "sons_files_1.pdf", objectifs: ["intonation"] },
+      { type: "gammes", titre: "Gammes 3 octaves", pdf: "gammes_3oct.pdf", objectifs: ["intonation", "vitesse"] },
+      { type: "exercice", titre: "Feuillard 32", pdf: "feuillard_32.pdf", objectifs: ["agilite"] },
+      { type: "etude", titre: "Popper 6", pdf: "popper_6.pdf", objectifs: ["vitesse"] },
+      { type: "repertoire", titre: "Bach Sarabande", pdf: "bach_sarabande.pdf", objectifs: ["intonation"] }
+    ];
+
+    const container = document.getElementById("preview");
+    blocs.forEach((bloc, i) => {
+      const div = document.createElement("div");
+      div.className = "bloc";
+      div.innerHTML = `
+        <h2>${bloc.type.toUpperCase()} – ${bloc.titre}</h2>
+        <p>Durée : ${bloc.duree} min</p>
+        <p>Objectif(s) : ${bloc.objectifs ? bloc.objectifs.join(", ") : ""}</p>
+        <iframe src="${bloc.pdf}#page=1"></iframe><br>
+        <button onclick="changer(${i})">Changer</button>
+      `;
+      container.appendChild(div);
+    });
+  </script>
+</body>
+</html>
