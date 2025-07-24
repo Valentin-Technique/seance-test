@@ -187,6 +187,15 @@
 sessionWithPauses.forEach(bloc => {
   bloc.type = bloc.type.trim().toLowerCase().replace(/\s+/g, "-");
 });
+    let seenSonsFiles = false;
+const cleanedSession = [];
+for (const bloc of sessionWithPauses) {
+  if (bloc.type === "sons-filés") {
+    if (seenSonsFiles) continue;
+    seenSonsFiles = true;
+  }
+  cleanedSession.push(bloc);
+}
 localStorage.setItem("seance", JSON.stringify(sessionWithPauses));
   </script>
 </body>
