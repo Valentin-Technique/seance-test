@@ -131,24 +131,34 @@
     ];
 
     function showPause(duration) {
-      container.innerHTML = '<div id="pause-message"></div>';
-      const msgDiv = document.getElementById('pause-message');
+      container.innerHTML = `
+  <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
+    <div id="pause-message" style="font-size: 2rem; margin-bottom: 2rem;"></div>
+    <div id="pause-timer" style="font-size: 4rem; margin-bottom: 2rem;">02:00</div>
+    <div>
+      <button onclick="skipSegment()">Passer au segment suivant</button>
+      <button onclick="endSession()" style="margin-left: 1rem;">Quitter la séance</button>
+    </div>
+  </div>
+`;
 
-      function rotateMessage() {
-        msgDiv.textContent = messages[Math.floor(Math.random() * messages.length)];
-      }
+const msgDiv = document.getElementById('pause-message');
+const timerDisplay = document.getElementById('pause-timer');
 
-      rotateMessage();
-      startTimer(duration, () => {
-        clearInterval(timerInterval);
-        current++;
-        loadNext();
-      });
+function rotateMessage() {
+  msgDiv.textContent = messages[Math.floor(Math.random() * messages.length)];
+}
 
-      const pauseMsgTimer = setInterval(() => {
-        rotateMessage();
-      }, 10000);
-    }
+rotateMessage();
+
+startTimer(duration, () => {
+  clearInterval(timerInterval);
+  current++;
+  loadNext();
+});
+
+setInterval(() => rotateMessage(), 10000);
+
 
     function startTimer(duration, callback) {
       clearInterval(timerInterval);
@@ -227,6 +237,32 @@
       }
 
       const bloc = blocs[current];
+      if (bloc.type === "sons-filés") {
+  container.innerHTML = `
+    <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
+      <div id="sons-timer" style="font-size: 8rem; margin-bottom: 2rem;">10:00</div>
+      <div>
+        <button onclick="skipSegment()">Passer au segment suivant</button>
+        <button onclick="endSession()" style="margin-left: 1rem;">Quitter la séance</button>
+      </div>
+    </div>
+  `;
+  let time = 10 * 60;
+  const timerDisplay = document.getElementById("sons-timer");
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    time--;
+    const min = Math.floor(time / 60).toString().padStart(2, "0");
+    const sec = (time % 60).toString().padStart(2, "0");
+    timerDisplay.textContent = `${min}:${sec}`;
+    if (time <= 0) {
+      clearInterval(timerInterval);
+      current++;
+      loadNext();
+    }
+  }, 1000);
+  return;
+}
       if (bloc.type === "pause") {
         showPause(bloc.duree * 60); // toujours 2 minutes
         return;
