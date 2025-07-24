@@ -93,7 +93,7 @@
   <div id="control-bar">
     <button onclick="endSession()">Terminer la séance</button>
     <button onclick="prevSegment()">Segment précédent</button>
-    <button onclick="skipSegment()">Passer le segment</button>
+    <button onclick="skipSegment()">Segment suivant</button>
   </div>
   <div id="pdf-container"></div>
   <div id="nav-bar">
@@ -133,23 +133,25 @@
     function showPause(duration) {
       container.innerHTML = '<div id="pause-message"></div>';
       const msgDiv = document.getElementById('pause-message');
-      let elapsed = 0;
+
       function rotateMessage() {
         msgDiv.textContent = messages[Math.floor(Math.random() * messages.length)];
       }
+
       rotateMessage();
-      const pauseInt = setInterval(() => {
-        elapsed += 10;
+      startTimer(duration, () => {
+        clearInterval(timerInterval);
+        current++;
+        loadNext();
+      });
+
+      const pauseMsgTimer = setInterval(() => {
         rotateMessage();
-        if (elapsed >= duration * 1000) {
-          clearInterval(pauseInt);
-          current++;
-          loadNext();
-        }
       }, 10000);
     }
 
     function startTimer(duration, callback) {
+      clearInterval(timerInterval);
       let remaining = duration;
       timerEl.textContent = formatTime(remaining);
       timerInterval = setInterval(() => {
@@ -226,7 +228,7 @@
 
       const bloc = blocs[current];
       if (bloc.type === "pause") {
-        showPause(bloc.duree * 60);
+        showPause(bloc.duree * 60); // toujours 2 minutes
         return;
       }
 
@@ -244,6 +246,7 @@
       });
     }
 
+    // Drag timer
     timerEl.addEventListener("mousedown", e => {
       isDragging = true;
       dragOffset.x = e.clientX - timerEl.offsetLeft;
@@ -257,6 +260,7 @@
     });
     document.addEventListener("mouseup", () => isDragging = false);
 
+    // Clavier
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowRight") changePage(1);
       if (e.key === "ArrowLeft") changePage(-1);
