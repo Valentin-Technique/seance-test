@@ -37,9 +37,10 @@
   <div id="timer"></div>
   <div id="pdf-container"></div>
 
-  <script src="pdfjs/pdf.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js';
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+</script>
 
     const blocs = JSON.parse(localStorage.getItem("seance") || "[]");
     const container = document.getElementById('pdf-container');
