@@ -227,7 +227,12 @@
       }
 
       const bloc = blocs[current];
-      if (bloc.type === "sons-filés") {
+      
+      if (bloc.type === "pause") {
+        showPause(bloc.duree * 60); // toujours 2 minutes
+        return;
+      }
+if (bloc.type === "sons-filés") {
   container.innerHTML = `
     <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
       <div id="sons-timer" style="font-size: 10rem; font-weight: bold; margin-bottom: 3rem;">10:00</div>
@@ -255,11 +260,6 @@
   }, 1000);
   return;
 }
-
-      if (bloc.type === "pause") {
-        showPause(bloc.duree * 60); // toujours 2 minutes
-        return;
-      }
 
       pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
         pdfDoc = pdf;
