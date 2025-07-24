@@ -14,32 +14,44 @@
     }
     h1 {
       font-size: 2rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .header-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .scroll-container {
+      display: flex;
+      flex-direction: row;
+      overflow-x: auto;
+      gap: 1.5rem;
+      padding-bottom: 1rem;
     }
     .block {
+      flex: 0 0 auto;
+      width: 300px;
       background: white;
       border-radius: 1rem;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-      padding: 1rem 1.5rem;
-      margin-bottom: 1.5rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .block-title {
       font-weight: bold;
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
-    }
-    .block-duration {
-      font-size: 0.9rem;
-      color: #555;
-      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      text-align: center;
     }
     .pdf-thumbnail {
-      max-width: 100px;
-      display: block;
-      margin-bottom: 0.5rem;
+      max-width: 90%;
+      max-height: 300px;
+      margin-bottom: 0.8rem;
     }
     .block-buttons {
-      margin-top: 0.5rem;
+      margin-bottom: 0.8rem;
     }
     button {
       font-family: inherit;
@@ -53,25 +65,26 @@
     button:hover {
       background: #444;
     }
+    .block-info {
+      font-size: 0.9rem;
+      color: #555;
+      text-align: center;
+    }
     .pause-block {
       font-style: italic;
       color: #777;
-    }
-    .footer-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 3rem;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-  <h1>Aperçu de la séance (mode test)</h1>
-  <div id="previewContainer"></div>
-
-  <div class="footer-buttons">
+  <h1>Aperçu de la séance</h1>
+  <div class="header-buttons">
     <button onclick="window.location.href='index.html'">Revenir à l’éditeur</button>
     <button onclick="window.location.href='lecture.html'">Démarrer la séance</button>
   </div>
+
+  <div class="scroll-container" id="previewContainer"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>
@@ -89,7 +102,6 @@
       { type: "répertoire", title: "Fauré Élégie", duration: 15, pdf: "faure_elegie.pdf" }
     ];
 
-    // Ajout automatique des pauses entre les blocs (sauf après sons-filés et après le dernier)
     const sessionWithPauses = [];
     baseSession.forEach((block, i) => {
       sessionWithPauses.push(block);
@@ -113,26 +125,21 @@
         ? "Sons filés"
         : block.title;
 
-      const duration = document.createElement("div");
-      duration.className = "block-duration";
-      duration.textContent = block.type === "pause"
-        ? "Durée : 2 min"
-        : block.type === "sons-filés"
-        ? "Durée : 10 min"
-        : `Durée : ${block.duration} min`;
-
       div.appendChild(title);
-      div.appendChild(duration);
 
       if (block.type === "pause") {
         const pauseText = document.createElement("div");
         pauseText.className = "pause-block";
-        pauseText.textContent = "Temps de repos";
+        pauseText.textContent = "2 min – Temps de repos";
         div.appendChild(pauseText);
         return div;
       }
 
       if (block.type === "sons-filés") {
+        const info = document.createElement("div");
+        info.className = "block-info";
+        info.textContent = "Durée : 10 min";
+        div.appendChild(info);
         return div;
       }
 
@@ -144,7 +151,7 @@
         const loadingTask = pdfjsLib.getDocument(block.pdf);
         loadingTask.promise.then(pdf => {
           pdf.getPage(1).then(page => {
-            const scale = 0.3;
+            const scale = 0.6;
             const viewport = page.getViewport({ scale });
             canvas.height = viewport.height;
             canvas.width = viewport.width;
@@ -162,9 +169,14 @@
       buttons.className = "block-buttons";
       const shuffleBtn = document.createElement("button");
       shuffleBtn.textContent = "Changer d’exercice";
-      shuffleBtn.onclick = () => location.reload(); // placeholder
+      shuffleBtn.onclick = () => location.reload(); // temporaire
       buttons.appendChild(shuffleBtn);
       div.appendChild(buttons);
+
+      const info = document.createElement("div");
+      info.className = "block-info";
+      info.innerHTML = `${block.title}<br>Durée : ${block.duration} min`;
+      div.appendChild(info);
 
       return div;
     }
