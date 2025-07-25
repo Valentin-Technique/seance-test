@@ -155,11 +155,18 @@
       for (const section of repartition) {
         const bloc = getRandomItemByType(section.type);
         if (bloc) {
-          session.push({
-            ...bloc,
-            duree: Math.round(duree * section.part),
-          });
-        }
+  session.push({
+    type: bloc.type,
+    title: bloc.titre,
+    pdf: bloc.pdf,
+    duree: Math.round(duree * section.part),
+    recueil: bloc.recueil || "",
+    auteur: bloc.auteur || "",
+    date: bloc.date || "",
+    objectifs: bloc.objectifs || ""
+  });
+}
+
       }
 
       // Insertion des pauses
