@@ -128,6 +128,16 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbzC5QT7l5KOLK31aabStx_lKwL9FW7lMqPYpvdSzxSAJohoDl1Zi1TI2ocT29GdOE-cLQ/exec";
     let base = [];
 
+    function populateSelect(id, values) {
+      const select = document.getElementById(id);
+      values.sort().forEach(val => {
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        select.appendChild(opt);
+      });
+    }
+
     fetch(API_URL)
       .then(res => res.json())
       .then(data => {
@@ -147,7 +157,6 @@
         populateSelect("epoque", epoques);
         populateSelect("objectifs", objectifs);
 
-        // Instruments (boutons radio)
         const instrSelect = document.getElementById("instrument");
         const instrOptions = document.getElementById("instrument-options");
         [...instrSelect.options].forEach(opt => {
@@ -156,7 +165,6 @@
           instrOptions.appendChild(label);
         });
 
-        // Époques (boutons radio)
         const epqSelect = document.getElementById("epoque");
         const epqOptions = document.getElementById("epoque-options");
         [...epqSelect.options].forEach(opt => {
@@ -165,7 +173,6 @@
           epqOptions.appendChild(label);
         });
 
-        // Objectifs (checkbox)
         const objSelect = document.getElementById("objectifs");
         const objCheckboxes = document.getElementById("objectifs-checkboxes");
         [...objSelect.options].forEach(opt => {
@@ -175,89 +182,78 @@
         });
       });
 
-    function populateSelect(id, values) {
-      const select = document.getElementById(id);
-      values.sort().forEach(val => {
-        const opt = document.createElement("option");
-        opt.value = val;
-        opt.textContent = val;
-        select.appendChild(opt);
-      });
-    }
-
     function shuffle(arr) {
       return arr.sort(() => Math.random() - 0.5);
     }
 
     document.getElementById("form").addEventListener("submit", e => {
-  e.preventDefault();
+      e.preventDefault();
 
-  const instrument = document.querySelector('input[name="instrument"]:checked')?.value;
-  const epoque = document.querySelector('input[name="epoque"]:checked')?.value;
-  const objectifs = Array.from(document.querySelectorAll('#objectifs-checkboxes input:checked')).map(cb => cb.value);
-  const duree = parseInt(document.querySelector('input[name="duree"]:checked')?.value || "60", 10);
-  const sonsFiles = document.getElementById("sonsFiles").checked;
+      const instrument = document.querySelector('input[name="instrument"]:checked')?.value;
+      const epoque = document.querySelector('input[name="epoque"]:checked')?.value;
+      const objectifs = Array.from(document.querySelectorAll('#objectifs-checkboxes input:checked')).map(cb => cb.value);
+      const duree = parseInt(document.querySelector('input[name="duree"]:checked')?.value || "60", 10);
+      const sonsFiles = document.getElementById("sonsFiles").checked;
 
-  if (!instrument || !epoque || objectifs.length === 0) {
-    alert("Merci de sélectionner un instrument, une époque et au moins un objectif.");
-    return;
-  }
+      if (!instrument || !epoque || objectifs.length === 0) {
+        alert("Merci de sélectionner un instrument, une époque et au moins un objectif.");
+        return;
+      }
 
-  const filtered = base.filter(item => {
-    const instrMatch = item.instrument?.includes(instrument);
-    const epqMatch = item.epoque?.includes(epoque);
-    const objMatch = objectifs.some(obj => item.objectifs?.includes(obj));
-    return instrMatch && epqMatch && objMatch;
-  });
-
-  const getRandomItemByType = (type) => {
-    const items = filtered.filter(e => e.type === type);
-    return items.length ? shuffle(items)[0] : null;
-  };
-
-  const session = [];
-
-  if (sonsFiles) {
-    session.push({ type: "sons-filés", duree: 10 });
-  }
-
-  const repartition = [
-    { type: "gammes", part: 0.1 },
-    { type: "exercice", part: 0.3 },
-    { type: "étude", part: 0.3 },
-    { type: "répertoire", part: 0.3 },
-  ];
-
-  for (const section of repartition) {
-    const bloc = getRandomItemByType(section.type);
-    if (bloc) {
-      session.push({
-        type: bloc.type,
-        title: bloc.titre,
-        pdf: bloc.pdf,
-        duree: Math.round(duree * section.part),
-        recueil: bloc.recueil || "",
-        auteur: bloc.auteur || "",
-        date: bloc.date || "",
-        objectifs: bloc.objectifs || ""
+      const filtered = base.filter(item => {
+        const instrMatch = item.instrument?.includes(instrument);
+        const epqMatch = item.epoque?.includes(epoque);
+        const objMatch = objectifs.some(obj => item.objectifs?.includes(obj));
+        return instrMatch && epqMatch && objMatch;
       });
-    }
-  }
 
-  // Insertion des pauses
-  const finalSession = [];
-  for (let i = 0; i < session.length; i++) {
-    finalSession.push(session[i]);
-    const isLast = i === session.length - 1;
-    const isWorkBlock = session[i].type !== "sons-filés";
-    const nextIsWorkBlock = session[i + 1] && session[i + 1].type !== "sons-filés";
-    if (!isLast && isWorkBlock && nextIsWorkBlock) {
-      finalSession.push({ type: "pause", duree: 2 });
-    }
-  }
+      const getRandomItemByType = (type) => {
+        const items = filtered.filter(e => e.type === type);
+        return items.length ? shuffle(items)[0] : null;
+      };
 
-  localStorage.setItem("seance", JSON.stringify(finalSession));
-  window.location.href = "preview.html";
+      const session = [];
+
+      if (sonsFiles) {
+        session.push({ type: "sons-filés", duree: 10 });
+      }
+
+      const repartition = [
+        { type: "gammes", part: 0.1 },
+        { type: "exercice", part: 0.3 },
+        { type: "étude", part: 0.3 },
+        { type: "répertoire", part: 0.3 },
+      ];
+
+      for (const section of repartition) {
+        const bloc = getRandomItemByType(section.type);
+        if (bloc) {
+          session.push({
+            type: bloc.type,
+            title: bloc.titre,
+            pdf: bloc.pdf,
+            duree: Math.round(duree * section.part),
+            recueil: bloc.recueil || "",
+            auteur: bloc.auteur || "",
+            date: bloc.date || "",
+            objectifs: bloc.objectifs || ""
+          });
+        }
+      }
+
+      const finalSession = [];
+      for (let i = 0; i < session.length; i++) {
+        finalSession.push(session[i]);
+        const isLast = i === session.length - 1;
+        const isWorkBlock = session[i].type !== "sons-filés";
+        const nextIsWorkBlock = session[i + 1] && session[i + 1].type !== "sons-filés";
+        if (!isLast && isWorkBlock && nextIsWorkBlock) {
+          finalSession.push({ type: "pause", duree: 2 });
+        }
+      }
+
+      localStorage.setItem("seance", JSON.stringify(finalSession));
+      window.location.href = "preview.html";
     });
   </script>
 </body>
