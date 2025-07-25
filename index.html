@@ -171,14 +171,6 @@ const objCheckboxes = document.getElementById("objectifs-checkboxes");
       });
     }
 
-    function getSelectedValues(selectId) {
-      const selected = [];
-      const options = document.getElementById(selectId).options;
-      for (const opt of options) {
-        if (opt.selected) selected.push(opt.value);
-      }
-      return selected;
-    }
 
     function shuffle(arr) {
       return arr.sort(() => Math.random() - 0.5);
@@ -189,7 +181,7 @@ const objCheckboxes = document.getElementById("objectifs-checkboxes");
 
       const instrument = document.getElementById("instrument").value;
       const epoque = document.getElementById("epoque").value;
-      const objectifs = getSelectedValues("objectifs");
+const objectifs = Array.from(document.querySelectorAll('#objectifs-checkboxes input:checked')).map(cb => cb.value);
       const duree = parseInt(document.getElementById("duree").value, 10);
       const sonsFiles = document.getElementById("sonsFiles").checked;
 
