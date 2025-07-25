@@ -27,34 +27,29 @@
       margin-bottom: 2rem;
     }
 
-    .checkbox-group {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-      margin-bottom: 1rem;
+    select, option {
+      font-size: 1rem;
     }
 
-    .checkbox-group label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+    select {
+      appearance: none;
       background-color: #fff;
       border: 1px solid #ccc;
       border-radius: 6px;
-      padding: 0.5rem 0.75rem;
+      padding: 0.6rem;
+      width: 100%;
       cursor: pointer;
-      font-weight: normal;
-      transition: background 0.2s ease;
+      transition: border-color 0.2s ease;
     }
 
-    .checkbox-group label:hover {
-      background-color: #eee;
+    select:focus {
+      border-color: #333;
+      outline: none;
     }
 
-    input[type="checkbox"],
-    input[type="radio"] {
-      transform: scale(1.2);
+    #objectifs {
+      height: auto;
+      min-height: 10rem;
     }
 
     .btn {
@@ -72,10 +67,6 @@
     .btn:hover {
       background-color: #444;
     }
-
-    select {
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -83,38 +74,35 @@
 
   <form id="form">
     <div class="form-section">
-      <label>Instrument :</label>
-      <div id="instrument-options" class="checkbox-group"></div>
+      <label for="instrument">Instrument :</label>
       <select id="instrument" required></select>
     </div>
 
     <div class="form-section">
-      <label>Époque :</label>
-      <div id="epoque-options" class="checkbox-group"></div>
+      <label for="epoque">Époque :</label>
       <select id="epoque" required></select>
     </div>
 
     <div class="form-section">
-      <label>Objectifs :</label>
-      <div id="objectifs-checkboxes" class="checkbox-group"></div>
-      <select id="objectifs" multiple required size="5"></select>
+      <label for="objectifs">Objectifs :</label>
+      <select id="objectifs" multiple required size="6"></select>
     </div>
 
     <div class="form-section">
-      <label>Durée :</label>
-      <div id="duree-options" class="checkbox-group">
-        <label><input type="radio" name="duree" value="20"> 20 min</label>
-        <label><input type="radio" name="duree" value="25"> 25 min</label>
-        <label><input type="radio" name="duree" value="30"> 30 min</label>
-        <label><input type="radio" name="duree" value="35"> 35 min</label>
-        <label><input type="radio" name="duree" value="40"> 40 min</label>
-        <label><input type="radio" name="duree" value="45"> 45 min</label>
-        <label><input type="radio" name="duree" value="50"> 50 min</label>
-        <label><input type="radio" name="duree" value="60" checked> 60 min</label>
-        <label><input type="radio" name="duree" value="90"> 90 min</label>
-        <label><input type="radio" name="duree" value="120"> 120 min</label>
-        <label><input type="radio" name="duree" value="180"> 180 min</label>
-      </div>
+      <label for="duree">Durée de la séance :</label>
+      <select id="duree" required>
+        <option value="20">20 min</option>
+        <option value="25">25 min</option>
+        <option value="30">30 min</option>
+        <option value="35">35 min</option>
+        <option value="40">40 min</option>
+        <option value="45">45 min</option>
+        <option value="50">50 min</option>
+        <option value="60" selected>60 min</option>
+        <option value="90">90 min</option>
+        <option value="120">120 min</option>
+        <option value="180">180 min</option>
+      </select>
     </div>
 
     <div class="form-section">
@@ -127,16 +115,6 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzC5QT7l5KOLK31aabStx_lKwL9FW7lMqPYpvdSzxSAJohoDl1Zi1TI2ocT29GdOE-cLQ/exec";
     let base = [];
-
-    function populateSelect(id, values) {
-      const select = document.getElementById(id);
-      values.sort().forEach(val => {
-        const opt = document.createElement("option");
-        opt.value = val;
-        opt.textContent = val;
-        select.appendChild(opt);
-      });
-    }
 
     fetch(API_URL)
       .then(res => res.json())
@@ -156,31 +134,26 @@
         populateSelect("instrument", instruments);
         populateSelect("epoque", epoques);
         populateSelect("objectifs", objectifs);
-
-        const instrSelect = document.getElementById("instrument");
-        const instrOptions = document.getElementById("instrument-options");
-        [...instrSelect.options].forEach(opt => {
-          const label = document.createElement("label");
-          label.innerHTML = `<input type="radio" name="instrument" value="${opt.value}" required> ${opt.textContent}`;
-          instrOptions.appendChild(label);
-        });
-
-        const epqSelect = document.getElementById("epoque");
-        const epqOptions = document.getElementById("epoque-options");
-        [...epqSelect.options].forEach(opt => {
-          const label = document.createElement("label");
-          label.innerHTML = `<input type="radio" name="epoque" value="${opt.value}" required> ${opt.textContent}`;
-          epqOptions.appendChild(label);
-        });
-
-        const objSelect = document.getElementById("objectifs");
-        const objCheckboxes = document.getElementById("objectifs-checkboxes");
-        [...objSelect.options].forEach(opt => {
-          const label = document.createElement("label");
-          label.innerHTML = `<input type="checkbox" value="${opt.value}" /> ${opt.textContent}`;
-          objCheckboxes.appendChild(label);
-        });
       });
+
+    function populateSelect(id, values) {
+      const select = document.getElementById(id);
+      values.sort().forEach(val => {
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        select.appendChild(opt);
+      });
+    }
+
+    function getSelectedValues(selectId) {
+      const selected = [];
+      const options = document.getElementById(selectId).options;
+      for (const opt of options) {
+        if (opt.selected) selected.push(opt.value);
+      }
+      return selected;
+    }
 
     function shuffle(arr) {
       return arr.sort(() => Math.random() - 0.5);
@@ -189,16 +162,11 @@
     document.getElementById("form").addEventListener("submit", e => {
       e.preventDefault();
 
-      const instrument = document.querySelector('input[name="instrument"]:checked')?.value;
-      const epoque = document.querySelector('input[name="epoque"]:checked')?.value;
-      const objectifs = Array.from(document.querySelectorAll('#objectifs-checkboxes input:checked')).map(cb => cb.value);
-      const duree = parseInt(document.querySelector('input[name="duree"]:checked')?.value || "60", 10);
+      const instrument = document.getElementById("instrument").value;
+      const epoque = document.getElementById("epoque").value;
+      const objectifs = getSelectedValues("objectifs");
+      const duree = parseInt(document.getElementById("duree").value, 10);
       const sonsFiles = document.getElementById("sonsFiles").checked;
-
-      if (!instrument || !epoque || objectifs.length === 0) {
-        alert("Merci de sélectionner un instrument, une époque et au moins un objectif.");
-        return;
-      }
 
       const filtered = base.filter(item => {
         const instrMatch = item.instrument?.includes(instrument);
