@@ -117,7 +117,7 @@ try {
       div.className = "block";
 
       const title = document.createElement("div");
-      title.className = "block-title";
+      title.className = "block-titre";
       title.textContent = block.type === "pause"
         ? "Pause"
         : block.type === "sons-filés"
@@ -175,7 +175,7 @@ try {
      const info = document.createElement("div");
 info.className = "block-info";
 
-let html = `<strong>${block.title}</strong><br>`;
+let html = `<strong>${block.titre}</strong><br>`;
 
 if (block.auteur) html += `Auteur : ${block.auteur}<br>`;
 if (block.recueil) html += `Recueil : ${block.recueil}<br>`;
