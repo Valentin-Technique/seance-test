@@ -172,10 +172,21 @@ try {
       buttons.appendChild(shuffleBtn);
       div.appendChild(buttons);
 
-      const info = document.createElement("div");
-      info.className = "block-info";
-      info.innerHTML = `${block.title}<br>Durée : ${block.duration} min`;
-      div.appendChild(info);
+     const info = document.createElement("div");
+info.className = "block-info";
+
+let html = `<strong>${block.title}</strong><br>`;
+
+if (block.auteur) html += `Auteur : ${block.auteur}<br>`;
+if (block.recueil) html += `Recueil : ${block.recueil}<br>`;
+if (block.date) html += `Date : ${block.date}<br>`;
+if (block.objectifs) html += `Objectifs : ${block.objectifs}<br>`;
+
+html += `Durée : ${block.duree || block.duration || "?"} min`;
+
+info.innerHTML = html;
+div.appendChild(info);
+
 
       return div;
     }
