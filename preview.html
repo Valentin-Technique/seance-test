@@ -125,6 +125,16 @@ typeLabel.textContent = block.type === "pause"
   : block.type.charAt(0).toUpperCase() + block.type.slice(1);
 div.appendChild(typeLabel);
 
+if (block.titre && block.type !== "pause" && block.type !== "sons-filés") {
+  const mainTitle = document.createElement("div");
+  mainTitle.style.fontWeight = "bold";
+  mainTitle.style.fontSize = "1.2rem";
+  mainTitle.style.marginBottom = "0.4rem";
+  mainTitle.style.textAlign = "center";
+  mainTitle.textContent = block.titre;
+  div.appendChild(mainTitle);
+}
+
 
       if (block.type === "pause") {
         const pauseText = document.createElement("div");
