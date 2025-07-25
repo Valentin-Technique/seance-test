@@ -116,15 +116,15 @@ try {
       const div = document.createElement("div");
       div.className = "block";
 
-      const title = document.createElement("div");
-      title.className = "block-titre";
-      title.textContent = block.type === "pause"
-        ? "Pause"
-        : block.type === "sons-filés"
-        ? "Sons filés"
-        : block.title;
+const typeLabel = document.createElement("div");
+typeLabel.className = "block-title";
+typeLabel.textContent = block.type === "pause"
+  ? "Pause"
+  : block.type === "sons-filés"
+  ? "Sons filés"
+  : block.type.charAt(0).toUpperCase() + block.type.slice(1);
+div.appendChild(typeLabel);
 
-      div.appendChild(title);
 
       if (block.type === "pause") {
         const pauseText = document.createElement("div");
