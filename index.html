@@ -80,7 +80,6 @@
       .then(data => {
         base = data;
 
-        // Extraire dynamiquement les options uniques
         const instruments = [...new Set(data.flatMap(e =>
           typeof e.instrument === "string" ? e.instrument.split(",").map(x => x.trim()) : []
         ))];
@@ -115,6 +114,10 @@
       return selected;
     }
 
+    function shuffle(arr) {
+      return arr.sort(() => Math.random() - 0.5);
+    }
+
     document.getElementById("form").addEventListener("submit", e => {
       e.preventDefault();
 
@@ -124,40 +127,49 @@
       const duree = parseInt(document.getElementById("duree").value, 10);
       const sonsFiles = document.getElementById("sonsFiles").checked;
 
-      const pool = base.filter(item => {
-        const matchInstr = item.instrument?.includes(instrument);
-        const matchEpoque = item.epoque?.includes(epoque);
-        const matchObj = objectifs.some(obj => item.objectifs?.includes(obj));
-        return matchInstr && matchEpoque && matchObj;
+      const filtered = base.filter(item => {
+        const instrMatch = item.instrument?.includes(instrument);
+        const epqMatch = item.epoque?.includes(epoque);
+        const objMatch = objectifs.some(obj => item.objectifs?.includes(obj));
+        return instrMatch && epqMatch && objMatch;
       });
 
-      const shuffle = arr => arr.sort(() => Math.random() - 0.5);
-      const selectedItems = shuffle(pool).slice(0, 4); // ou plus tard, réparti par type
+      const getRandomItemByType = (type) => {
+        const items = filtered.filter(e => e.type === type);
+        return items.length ? shuffle(items)[0] : null;
+      };
 
       const session = [];
 
       if (sonsFiles) {
-        session.push({ type: "sons-filés" });
+        session.push({ type: "sons-filés", duree: 10 });
       }
 
-      selectedItems.forEach(item => {
-        session.push({
-          type: item.type,
-          title: item.titre,
-          pdf: item.pdf,
-          duree: 15 // ou calculer dynamiquement
-        });
-      });
+      const repartition = [
+        { type: "gammes", part: 0.1 },
+        { type: "exercice", part: 0.3 },
+        { type: "étude", part: 0.3 },
+        { type: "répertoire", part: 0.3 },
+      ];
 
-      // Ajouter pauses entre blocs de travail
+      for (const section of repartition) {
+        const bloc = getRandomItemByType(section.type);
+        if (bloc) {
+          session.push({
+            ...bloc,
+            duree: Math.round(duree * section.part),
+          });
+        }
+      }
+
+      // Insertion des pauses
       const finalSession = [];
       for (let i = 0; i < session.length; i++) {
         finalSession.push(session[i]);
-        if (
-          i < session.length - 1 &&
-          session[i].type !== "sons-filés" &&
-          session[i + 1].type !== "sons-filés"
-        ) {
+        const isLast = i === session.length - 1;
+        const isWorkBlock = session[i].type !== "sons-filés";
+        const nextIsWorkBlock = session[i + 1] && session[i + 1].type !== "sons-filés";
+        if (!isLast && isWorkBlock && nextIsWorkBlock) {
           finalSession.push({ type: "pause", duree: 2 });
         }
       }
