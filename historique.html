@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Historique des séances</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: "IBM Plex Sans", sans-serif;
-      background-color: #f5f5f5;
-      margin: 0;
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: #f5f5f5;
       padding: 2rem;
       color: #222;
     }
@@ -20,8 +19,8 @@
     .seance-card {
       background: white;
       border-radius: 1rem;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 1rem;
       margin-bottom: 2rem;
     }
     .seance-header {
@@ -30,54 +29,63 @@
       align-items: center;
       margin-bottom: 1rem;
     }
-    .seance-date {
-      font-weight: bold;
+    .objectif-badge {
+      display: inline-block;
+      background-color: #eee;
+      color: #333;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      margin: 0.2rem;
     }
-    .seance-blocks {
+    .bloc-container {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
-      margin-top: 1rem;
     }
-    .block-preview {
-      width: 130px;
+    .bloc-mini {
       background: #fafafa;
       border-radius: 0.5rem;
       padding: 0.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      width: 180px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
       display: flex;
       flex-direction: column;
       align-items: center;
+      font-size: 0.85rem;
     }
-    .block-preview canvas {
+    .bloc-mini canvas {
       width: 100%;
       height: auto;
+      margin-bottom: 0.5rem;
+    }
+    .bloc-title {
+      font-weight: bold;
+      font-size: 1rem;
+      text-align: center;
       margin-bottom: 0.3rem;
     }
-    .block-type {
-      font-size: 0.85rem;
-      font-weight: bold;
-      text-align: center;
-    }
-    .block-title {
-      font-size: 0.75rem;
-      text-align: center;
+    .meta {
       color: #555;
-    }
-    .block-duration {
       font-size: 0.75rem;
       text-align: center;
-      color: #888;
+      margin-bottom: 0.3rem;
+    }
+    .meta:last-child {
+      margin-bottom: 0;
+    }
+    .seance-footer {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
     }
     button {
-      font-family: inherit;
       background: #222;
       color: white;
       border: none;
       border-radius: 0.5rem;
       padding: 0.5rem 1rem;
       cursor: pointer;
-      margin-left: 0.5rem;
     }
     button:hover {
       background: #444;
@@ -86,88 +94,113 @@
 </head>
 <body>
   <h1>Historique des séances</h1>
-  <div id="historyContainer"></div>
+  <div id="history"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+    const container = document.getElementById("history");
+    const historique = JSON.parse(localStorage.getItem("historiqueSeances") || "[]").reverse();
 
-    const container = document.getElementById("historyContainer");
-    const history = JSON.parse(localStorage.getItem("historiqueSeances") || "[]").reverse();
-
-    history.forEach((entry, index) => {
+    historique.forEach((item, index) => {
       const card = document.createElement("div");
       card.className = "seance-card";
 
       const header = document.createElement("div");
       header.className = "seance-header";
-      header.innerHTML = `
-        <div class="seance-date">Séance du ${new Date(entry.timestamp).toLocaleString()}</div>
-        <div>
-          <button onclick="loadSession(${index}, 'preview.html')">Prévisualiser</button>
-          <button onclick="loadSession(${index}, 'lecture.html')">Démarrer</button>
-        </div>
-      `;
+      header.innerHTML = `<strong>Séance ${historique.length - index}</strong><span>${new Date(item.timestamp).toLocaleString()}</span>`;
       card.appendChild(header);
 
-      const blocksContainer = document.createElement("div");
-      blocksContainer.className = "seance-blocks";
+      // Objectifs globaux (premier bloc qui les contient)
+      const objDiv = document.createElement("div");
+      const premierBloc = item.session.find(b => b.objectifs);
+      if (premierBloc) {
+        const objectifs = premierBloc.objectifs.split(",").map(o => o.trim());
+        objectifs.forEach(obj => {
+          const badge = document.createElement("span");
+          badge.className = "objectif-badge";
+          badge.textContent = obj;
+          objDiv.appendChild(badge);
+        });
+        card.appendChild(objDiv);
+      }
 
-      entry.session.forEach(block => {
-        if (block.type === "pause" || block.type === "sons-filés") return;
+      const blocContainer = document.createElement("div");
+      blocContainer.className = "bloc-container";
 
-        const div = document.createElement("div");
-        div.className = "block-preview";
+      item.session.forEach(bloc => {
+        if (bloc.type === "pause") return;
 
-        const canvas = document.createElement("canvas");
-        div.appendChild(canvas);
+        const blocDiv = document.createElement("div");
+        blocDiv.className = "bloc-mini";
 
-        const type = document.createElement("div");
-        type.className = "block-type";
-        type.textContent = block.type;
-        div.appendChild(type);
+        const typeLabel = document.createElement("div");
+        typeLabel.className = "bloc-title";
+        typeLabel.textContent = bloc.type === "sons-filés" ? "Sons filés" : bloc.type;
+        blocDiv.appendChild(typeLabel);
 
-        const title = document.createElement("div");
-        title.className = "block-title";
-        title.textContent = block.title || "";
-        div.appendChild(title);
-
-        const duration = document.createElement("div");
-        duration.className = "block-duration";
-        duration.textContent = `${block.duree || "?"} min`;
-        div.appendChild(duration);
-
-        if (block.pdf) {
-          const loadingTask = pdfjsLib.getDocument(block.pdf);
-          loadingTask.promise.then(pdf => {
+        if (bloc.pdf) {
+          const canvas = document.createElement("canvas");
+          blocDiv.appendChild(canvas);
+          pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
             pdf.getPage(1).then(page => {
               const scale = 0.4;
               const viewport = page.getViewport({ scale });
-              canvas.height = viewport.height;
               canvas.width = viewport.width;
-
+              canvas.height = viewport.height;
               const renderContext = {
                 canvasContext: canvas.getContext("2d"),
-                viewport: viewport
+                viewport
               };
               page.render(renderContext);
             });
           });
         }
 
-        blocksContainer.appendChild(div);
+        if (bloc.titre) {
+          const titre = document.createElement("div");
+          titre.style.fontWeight = "600";
+          titre.style.marginBottom = "0.3rem";
+          titre.style.textAlign = "center";
+          titre.textContent = bloc.titre;
+          blocDiv.appendChild(titre);
+        }
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        if (bloc.auteur) meta.innerHTML += bloc.auteur + '<br>';
+        if (bloc.recueil) meta.innerHTML += bloc.recueil + '<br>';
+        if (bloc.date) meta.innerHTML += bloc.date + '<br>';
+        meta.innerHTML += `<strong>${bloc.duree || "?"} min</strong>`;
+        blocDiv.appendChild(meta);
+
+        blocContainer.appendChild(blocDiv);
       });
 
-      card.appendChild(blocksContainer);
+      card.appendChild(blocContainer);
+
+      const footer = document.createElement("div");
+      footer.className = "seance-footer";
+      const btnPreview = document.createElement("button");
+      btnPreview.textContent = "Prévisualiser";
+      btnPreview.onclick = () => {
+        localStorage.setItem("seance", JSON.stringify(item.session));
+        window.location.href = "preview.html";
+      };
+
+      const btnStart = document.createElement("button");
+      btnStart.textContent = "Démarrer";
+      btnStart.onclick = () => {
+        localStorage.setItem("seance", JSON.stringify(item.session));
+        window.location.href = "lecture.html";
+      };
+
+      footer.appendChild(btnPreview);
+      footer.appendChild(btnStart);
+      card.appendChild(footer);
+
       container.appendChild(card);
     });
-
-    function loadSession(index, targetPage) {
-      const history = JSON.parse(localStorage.getItem("historiqueSeances") || "[]");
-      const selected = history[history.length - 1 - index];
-      localStorage.setItem("seance", JSON.stringify(selected.session));
-      window.location.href = targetPage;
-    }
   </script>
 </body>
 </html>
