@@ -227,7 +227,15 @@ for (let i = 0; i < session.length; i++) {
 }
 
 localStorage.setItem("seance", JSON.stringify(session));
-      window.location.href = "preview.html";
+
+const history = JSON.parse(localStorage.getItem("historiqueSeances") || "[]");
+history.push({
+  timestamp: new Date().toISOString(),
+  session: session
+});
+localStorage.setItem("historiqueSeances", JSON.stringify(history));
+
+window.location.href = "preview.html";
     });
   </script>
 </body>
