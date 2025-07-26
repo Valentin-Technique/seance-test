@@ -99,11 +99,13 @@
       transition: background-color 0.2s, transform 0.2s;
     }
 
-    #nav-bar button:hover, #control-bar button:hover {
-      background-color: #555;
-      transform: scale(1.05);
-    }
-
+   @media (hover: hover) {
+  #nav-bar button:hover,
+  #control-bar button:hover {
+    background-color: #555;
+    transform: scale(1.05);
+  }
+}
     #control-bar {
       position: fixed;
       top: 10px;
