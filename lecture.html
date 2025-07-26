@@ -159,6 +159,8 @@ for (let i = 0; i < rawSession.length; i++) {
     let timerInterval;
     let dragOffset = {x:0, y:0};
     let isDragging = false;
+    let pdfMode = false;
+
 
     const messages = [
       "Pense à relâcher les épaules.",
@@ -272,14 +274,16 @@ for (let i = 0; i < rawSession.length; i++) {
       bloc.type = bloc.type.trim().toLowerCase().replace(/\s+/g, "-");
 
       if (bloc.type === "pause") {
-        document.getElementById("nav-bar").style.display = "none";
-        showPause((bloc.duree || 2) * 60);
-        return;
-      }
+  pdfMode = false;
+  document.getElementById("nav-bar").style.display = "none";
+  showPause((bloc.duree || 2) * 60);
+  return;
+}
 
       if (bloc.type === "sons-filés") {
-        timerEl.style.display = "none";
-        document.getElementById("nav-bar").style.display = "none";
+  pdfMode = false;
+  timerEl.style.display = "none";
+  document.getElementById("nav-bar").style.display = "none";
         container.className = "sonsf";
         container.innerHTML = `
   <div style="width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; background:black; text-align:center;">
@@ -310,6 +314,7 @@ for (let i = 0; i < rawSession.length; i++) {
       timerEl.style.display = "block";
       container.className = "";
 
+      pdfMode = true;
       pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
         pdfDoc = pdf;
         pageNum = 1;
@@ -334,20 +339,21 @@ for (let i = 0; i < rawSession.length; i++) {
     });
     document.addEventListener("mouseup", () => isDragging = false);
 
-    timerEl.addEventListener("touchstart", e => {
-  isDragging = true;
-  const touch = e.touches[0];
-  dragOffset.x = touch.clientX - timerEl.offsetLeft;
-  dragOffset.y = touch.clientY - timerEl.offsetTop;
+    let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener("touchstart", e => {
+  touchStartX = e.changedTouches[0].screenX;
 });
-document.addEventListener("touchmove", e => {
-  if (isDragging) {
-    const touch = e.touches[0];
-    timerEl.style.left = (touch.clientX - dragOffset.x) + "px";
-    timerEl.style.top = (touch.clientY - dragOffset.y) + "px";
+
+document.addEventListener("touchend", e => {
+  touchEndX = e.changedTouches[0].screenX;
+  const deltaX = touchEndX - touchStartX;
+  if (Math.abs(deltaX) > 50 && pdfMode) {
+    if (deltaX > 0) changePage(-1);
+    else changePage(1);
   }
 });
-document.addEventListener("touchend", () => isDragging = false);
 
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowRight") changePage(1);
