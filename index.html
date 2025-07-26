@@ -249,7 +249,7 @@ window.location.href = "preview.html";
   <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/seance-test/service-worker.js')
+      navigator.serviceWorker.register('./service-worker.js')
         .catch(function (error) {
           console.error('Service Worker registration failed:', error);
         });
