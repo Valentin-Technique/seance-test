@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Lecture de séance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <style>
     html, body {
       margin: 0;
@@ -70,8 +71,8 @@
       gap: 10px;
     }
     #nav-bar button, #control-bar button {
-      padding: 10px 16px;
-      font-size: 16px;
+      padding: 14px 20px;
+      font-size: 18px;
       cursor: pointer;
       background-color: #222;
       color: white;
@@ -115,26 +116,25 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
     const rawSession = JSON.parse(localStorage.getItem("seance") || "[]");
-const blocs = [];
-for (let i = 0; i < rawSession.length; i++) {
-  const current = rawSession[i];
-  const next = rawSession[i + 1];
-  blocs.push(current);
+    const blocs = [];
+    for (let i = 0; i < rawSession.length; i++) {
+      const current = rawSession[i];
+      const next = rawSession[i + 1];
+      blocs.push(current);
+      const isWorkBlock = current.type !== "sons-filés" && current.type !== "pause";
+      const nextIsWorkBlock = next && next.type !== "sons-filés" && next.type !== "pause";
+      if (isWorkBlock && nextIsWorkBlock) {
+        blocs.push({ type: "pause", duree: 2 });
+      }
+    }
 
-  const isWorkBlock = current.type !== "sons-filés" && current.type !== "pause";
-  const nextIsWorkBlock = next && next.type !== "sons-filés" && next.type !== "pause";
-
-  if (isWorkBlock && nextIsWorkBlock) {
-    blocs.push({ type: "pause", duree: 2 });
-  }
-}
     const container = document.getElementById('pdf-container');
     const timerEl = document.getElementById('timer');
 
     let current = 0;
     let pdfDoc = null;
     let pageNum = 1;
-    let scale = 1.5;
+    let scale = 1.2;
     let timerInterval;
     let dragOffset = {x:0, y:0};
     let isDragging = false;
@@ -153,18 +153,15 @@ for (let i = 0; i < rawSession.length; i++) {
     function showPause(duration) {
       container.innerHTML = '<div id="pause-message"></div>';
       const msgDiv = document.getElementById('pause-message');
-
       function rotateMessage() {
         msgDiv.textContent = messages[Math.floor(Math.random() * messages.length)];
       }
-
       rotateMessage();
       startTimer(duration, () => {
         clearInterval(timerInterval);
         current++;
         loadNext();
       });
-
       const pauseMsgTimer = setInterval(() => {
         rotateMessage();
       }, 10000);
@@ -265,11 +262,8 @@ for (let i = 0; i < rawSession.length; i++) {
     <div id="sons-timer" style="font-size: 10rem; font-weight: bold;">10:00</div>
   </div>
 `;
-
-
         let time = 10 * 60;
         const timerDisplay = document.getElementById("sons-timer");
-
         clearInterval(timerInterval);
         timerInterval = setInterval(() => {
           time--;
@@ -288,7 +282,6 @@ for (let i = 0; i < rawSession.length; i++) {
       document.getElementById("nav-bar").style.display = "flex";
       timerEl.style.display = "block";
       container.className = "";
-
       pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
         pdfDoc = pdf;
         pageNum = 1;
@@ -300,28 +293,7 @@ for (let i = 0; i < rawSession.length; i++) {
       });
     }
 
+    // timer draggable tactile et souris
     timerEl.addEventListener("mousedown", e => {
       isDragging = true;
-      dragOffset.x = e.clientX - timerEl.offsetLeft;
-      dragOffset.y = e.clientY - timerEl.offsetTop;
-    });
-    document.addEventListener("mousemove", e => {
-      if (isDragging) {
-        timerEl.style.left = (e.clientX - dragOffset.x) + "px";
-        timerEl.style.top = (e.clientY - dragOffset.y) + "px";
-      }
-    });
-    document.addEventListener("mouseup", () => isDragging = false);
-
-    document.addEventListener("keydown", e => {
-      if (e.key === "ArrowRight") changePage(1);
-      if (e.key === "ArrowLeft") changePage(-1);
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.body.requestFullscreen?.().catch(() => {});
-      loadNext();
-    });
-  </script>
-</body>
-</html>
+      dragOffset.x = e.clientX - timerEl.offse
