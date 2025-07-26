@@ -1,24 +1,30 @@
-const CACHE_NAME = "seance-cache-v1";
+// service-worker.js
+const CACHE_NAME = 'seance-cache-v1';
 const urlsToCache = [
-  "index.html",
-  "preview.html",
-  "lecture.html",
-  "manifest.webmanifest",
-  "icon-192.png",
-  "icon-512.png",
-  "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap",
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"
+  '/',
+  '/seance-test/index.html',
+  '/seance-test/preview.html',
+  '/seance-test/lecture.html',
+  '/seance-test/historique.html',
+  '/seance-test/manifest.webmanifest',
+  '/seance-test/icone-192.png',
+  '/seance-test/icone-512.png',
+  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap',
+  // ajoute ici d'autres fichiers statiques si nécessaire
 ];
 
-self.addEventListener("install", event => {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
-self.addEventListener("fetch", event => {
+self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
   );
 });
