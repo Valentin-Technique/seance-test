@@ -114,7 +114,20 @@
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-    const blocs = JSON.parse(localStorage.getItem("seance") || "[]");
+    const rawSession = JSON.parse(localStorage.getItem("seance") || "[]");
+const blocs = [];
+for (let i = 0; i < rawSession.length; i++) {
+  const current = rawSession[i];
+  const next = rawSession[i + 1];
+  blocs.push(current);
+
+  const isWorkBlock = current.type !== "sons-filés" && current.type !== "pause";
+  const nextIsWorkBlock = next && next.type !== "sons-filés" && next.type !== "pause";
+
+  if (isWorkBlock && nextIsWorkBlock) {
+    blocs.push({ type: "pause", duree: 2 });
+  }
+}
     const container = document.getElementById('pdf-container');
     const timerEl = document.getElementById('timer');
 
