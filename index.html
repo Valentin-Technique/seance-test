@@ -17,63 +17,39 @@
       margin-bottom: 1.5rem;
     }
 
-    label {
-      font-weight: 600;
-      margin-bottom: 0.4rem;
-      display: block;
-    }
-
     .form-section {
       margin-bottom: 2rem;
     }
 
-    select, option {
-      font-size: 1rem;
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.5rem;
     }
 
-    select {
-      appearance: none;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 0.75rem;
-  font-size: 1rem;
-  width: 100%;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-weight: normal;
+      transition: background 0.2s ease;
     }
 
-    select:focus {
-      border-color: #333;
-      outline: none;
+    .checkbox-group label:hover {
+      background-color: #eee;
     }
 
-    #objectifs {
-      min-height: 10rem;
-  height: auto;
-  padding: 0.5rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.4rem;
-  font-size: 0.95rem;
+    input[type="checkbox"],
+    input[type="radio"] {
+      transform: scale(1.2);
     }
 
-    #objectifs option {
-  padding: 0.4rem 0.6rem;
-  background-color: #f9f9f9;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin: 0;
-  cursor: pointer;
-}
-
-    #objectifs option:checked {
-  background-color: #d1eaff;
-  border-color: #3399ff;
-  color: #000;
-}
-    
     .btn {
       background-color: #222;
       color: white;
@@ -96,35 +72,35 @@
 
   <form id="form">
     <div class="form-section">
-      <label for="instrument">Instrument :</label>
-      <select id="instrument" required></select>
+      <label>Instrument :</label>
+      <div id="instrument-options" class="checkbox-group"></div>
     </div>
 
     <div class="form-section">
-      <label for="epoque">Époque :</label>
-      <select id="epoque" required></select>
+      <label>Époque :</label>
+      <div id="epoque-options" class="checkbox-group"></div>
     </div>
 
     <div class="form-section">
-      <label for="objectifs">Objectifs :</label>
-      <select id="objectifs" multiple required size="6"></select>
+      <label>Objectifs :</label>
+      <div id="objectifs-options" class="checkbox-group"></div>
     </div>
 
     <div class="form-section">
-      <label for="duree">Durée de la séance :</label>
-      <select id="duree" required>
-        <option value="20">20 min</option>
-        <option value="25">25 min</option>
-        <option value="30">30 min</option>
-        <option value="35">35 min</option>
-        <option value="40">40 min</option>
-        <option value="45">45 min</option>
-        <option value="50">50 min</option>
-        <option value="60" selected>60 min</option>
-        <option value="90">90 min</option>
-        <option value="120">120 min</option>
-        <option value="180">180 min</option>
-      </select>
+      <label>Durée :</label>
+      <div id="duree-options" class="checkbox-group">
+        <label><input type="radio" name="duree" value="20"> 20 min</label>
+        <label><input type="radio" name="duree" value="25"> 25 min</label>
+        <label><input type="radio" name="duree" value="30"> 30 min</label>
+        <label><input type="radio" name="duree" value="35"> 35 min</label>
+        <label><input type="radio" name="duree" value="40"> 40 min</label>
+        <label><input type="radio" name="duree" value="45"> 45 min</label>
+        <label><input type="radio" name="duree" value="50"> 50 min</label>
+        <label><input type="radio" name="duree" value="60" checked> 60 min</label>
+        <label><input type="radio" name="duree" value="90"> 90 min</label>
+        <label><input type="radio" name="duree" value="120"> 120 min</label>
+        <label><input type="radio" name="duree" value="180"> 180 min</label>
+      </div>
     </div>
 
     <div class="form-section">
@@ -153,28 +129,27 @@
           typeof e.objectifs === "string" ? e.objectifs.split(",").map(x => x.trim()) : []
         ))];
 
-        populateSelect("instrument", instruments);
-        populateSelect("epoque", epoques);
-        populateSelect("objectifs", objectifs);
+        populateRadio("instrument-options", "instrument", instruments);
+        populateRadio("epoque-options", "epoque", epoques);
+        populateCheckbox("objectifs-options", objectifs);
       });
 
-    function populateSelect(id, values) {
-      const select = document.getElementById(id);
+    function populateRadio(containerId, name, values) {
+      const container = document.getElementById(containerId);
       values.sort().forEach(val => {
-        const opt = document.createElement("option");
-        opt.value = val;
-        opt.textContent = val;
-        select.appendChild(opt);
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="radio" name="${name}" value="${val}" required> ${val}`;
+        container.appendChild(label);
       });
     }
 
-    function getSelectedValues(selectId) {
-      const selected = [];
-      const options = document.getElementById(selectId).options;
-      for (const opt of options) {
-        if (opt.selected) selected.push(opt.value);
-      }
-      return selected;
+    function populateCheckbox(containerId, values) {
+      const container = document.getElementById(containerId);
+      values.sort().forEach(val => {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="checkbox" name="objectifs" value="${val}"> ${val}`;
+        container.appendChild(label);
+      });
     }
 
     function shuffle(arr) {
@@ -184,11 +159,16 @@
     document.getElementById("form").addEventListener("submit", e => {
       e.preventDefault();
 
-      const instrument = document.getElementById("instrument").value;
-      const epoque = document.getElementById("epoque").value;
-      const objectifs = getSelectedValues("objectifs");
-      const duree = parseInt(document.getElementById("duree").value, 10);
+      const instrument = document.querySelector('input[name="instrument"]:checked')?.value;
+      const epoque = document.querySelector('input[name="epoque"]:checked')?.value;
+      const objectifs = Array.from(document.querySelectorAll('input[name="objectifs"]:checked')).map(cb => cb.value);
+      const duree = parseInt(document.querySelector('input[name="duree"]:checked')?.value || "60", 10);
       const sonsFiles = document.getElementById("sonsFiles").checked;
+
+      if (!instrument || !epoque || objectifs.length === 0) {
+        alert("Merci de sélectionner un instrument, une époque et au moins un objectif.");
+        return;
+      }
 
       const filtered = base.filter(item => {
         const instrMatch = item.instrument?.includes(instrument);
