@@ -211,16 +211,20 @@
         }
       }
 
-      const finalSession = [];
-      for (let i = 0; i < session.length; i++) {
-        finalSession.push(session[i]);
-        const isLast = i === session.length - 1;
-        const isWorkBlock = session[i].type !== "sons-filés";
-        const nextIsWorkBlock = session[i + 1] && session[i + 1].type !== "sons-filés";
-        if (!isLast && isWorkBlock && nextIsWorkBlock) {
-          finalSession.push({ type: "pause", duree: 2 });
-        }
-      }
+     const finalSession = [];
+
+for (let i = 0; i < session.length; i++) {
+  const current = session[i];
+  const next = session[i + 1];
+  finalSession.push(current);
+
+  const isWorkBlock = current.type !== "sons-filés" && current.type !== "pause";
+  const nextIsWorkBlock = next && next.type !== "sons-filés" && next.type !== "pause";
+
+  if (isWorkBlock && nextIsWorkBlock) {
+    finalSession.push({ type: "pause", duree: 2 });
+  }
+}
 
       localStorage.setItem("seance", JSON.stringify(finalSession));
       window.location.href = "preview.html";
