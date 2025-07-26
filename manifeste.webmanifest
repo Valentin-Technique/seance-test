@@ -1,19 +1,19 @@
 {
-  "name": "Séance technique",
+  "name": "Séance de travail",
   "short_name": "Séance",
-  "start_url": "index.html",
+  "start_url": "/seance-test/index.html",
+  "scope": "/seance-test/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
-  "orientation": "portrait",
   "icons": [
     {
-      "src": "icone-192.png",
+      "src": "/seance-test/icone-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icone-512.png",
+      "src": "/seance-test/icone-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
