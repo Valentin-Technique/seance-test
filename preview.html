@@ -103,23 +103,22 @@
   <script>
     const container = document.getElementById("previewContainer");
 
-    let baseSession = [];
-try {
-  baseSession = JSON.parse(localStorage.getItem("seance")) || [];
-} catch (e) {
-  console.error("Erreur de chargement de la séance :", e);
+    const rawSession = JSON.parse(localStorage.getItem("seance") || "[]");
+const sessionWithPauses = [];
+
+for (let i = 0; i < rawSession.length; i++) {
+  const current = rawSession[i];
+  const next = rawSession[i + 1];
+  sessionWithPauses.push(current);
+
+  const isWorkBlock = current.type !== "sons-filés" && current.type !== "pause";
+  const nextIsWorkBlock = next && next.type !== "sons-filés" && next.type !== "pause";
+
+  if (isWorkBlock && nextIsWorkBlock) {
+    sessionWithPauses.push({ type: "pause", duree: 2 });
+  }
 }
 
-    const sessionWithPauses = [];
-    baseSession.forEach((block, i) => {
-      sessionWithPauses.push(block);
-      const isLast = i === baseSession.length - 1;
-      const isWorkBlock = block.type !== "sons-filés";
-      const nextBlockIsWork = baseSession[i + 1] && baseSession[i + 1].type !== "sons-filés";
-      if (!isLast && isWorkBlock && nextBlockIsWork) {
-        sessionWithPauses.push({ type: "pause" });
-      }
-    });
 
     function createBlockElement(block) {
       const div = document.createElement("div");
