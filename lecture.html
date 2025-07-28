@@ -224,18 +224,34 @@
     }
 
     function renderPage(pdf, num) {
-      pdf.getPage(num).then(page => {
-        const viewport = page.getViewport({ scale });
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext('2d');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        canvasWrapper.innerHTML = "";
-        canvasWrapper.appendChild(canvas);
-        const renderContext = { canvasContext: ctx, viewport: viewport };
-        page.render(renderContext);
-      });
-    }
+  pdf.getPage(num).then(page => {
+    const viewport = page.getViewport({ scale: 1.0 });
+
+    // Dimensions de l'écran visible
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    // On veut que la largeur (ou hauteur) du PDF s'ajuste à l'écran, sans dépasser
+    const widthRatio = screenWidth / viewport.width;
+    const heightRatio = screenHeight / viewport.height;
+
+    // Le plus petit ratio permet de tout afficher à l'écran
+    scale = Math.min(widthRatio, heightRatio);
+
+    const adjustedViewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext('2d');
+    canvas.width = adjustedViewport.width;
+    canvas.height = adjustedViewport.height;
+
+    canvasWrapper.innerHTML = "";
+    canvasWrapper.appendChild(canvas);
+
+    const renderContext = { canvasContext: ctx, viewport: adjustedViewport };
+    page.render(renderContext);
+  });
+}
+
 
     function changePage(offset) {
       if (!pdfDoc) return;
@@ -322,7 +338,6 @@
       pdfjsLib.getDocument(bloc.pdf).promise.then(pdf => {
         pdfDoc = pdf;
         pageNum = 1;
-        scale = 1.0;
         renderPage(pdfDoc, pageNum);
         startTimer((bloc.duree || 10) * 60, () => {
           current++;
